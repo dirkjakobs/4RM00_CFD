@@ -1,6 +1,6 @@
 /*
-!.gitignore
-!.c
-!.h
-!.xlsm
-!.md
+!*.gitignore
+!*.c
+!*.h
+!*.xlsm
+!*.md
