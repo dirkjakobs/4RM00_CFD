@@ -12,7 +12,7 @@
 #define LARGE      1E30      /* arbitrary very large value [-] */
 #define SMALL      1E-30     /* arbitrary very small value [-] */
 #define P_ATM      101000.   /* athmospheric pressure [Pa] */
-#define U_IN       0.1       /* in flow velocity [m/s] */
+#define U_IN       1.       /* in flow velocity [m/s] */
 
 #define Cmu        0.09
 #define sigmak       1.
