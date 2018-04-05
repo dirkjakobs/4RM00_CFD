@@ -1,6 +1,6 @@
 
 #define PI         3.1415927 /* value of pi [-] */
-#define MAX_ITER   100       /* maximum number of outer iterations [-] */
+//#define MAX_ITER 100       /* maximum number of outer iterations [-] */ ### FROM TEXT FILE ###
 #define U_ITER     1         /* number of Newton iterations for u equation [-] */
 #define V_ITER     1         /* number of Newton iterations for u equation [-] */
 #define PC_ITER    30        /* number of Newton iterations for pc equation [-] */
@@ -12,7 +12,7 @@
 #define LARGE      1E30      /* arbitrary very large value [-] */
 #define SMALL      1E-30     /* arbitrary very small value [-] */
 #define P_ATM      101000.   /* athmospheric pressure [Pa] */
-#define U_IN       0.1       /* in flow velocity [m/s] */
+//#define U_IN       0.1     /* in flow velocity [m/s] */ ### FROM TEXT FILE ###
 
 #define Cmu        0.09
 #define sigmak       1.
@@ -23,4 +23,4 @@
 #define ERough     9.793
 #define Ti         0.04
 
-#define TEMP       320.      /* temeperature of constrained parts! */    	
+//#define TEMP     320.      /* temeperature of constrained parts! */ ### FROM TEXT FILE ###
