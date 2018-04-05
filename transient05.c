@@ -223,10 +223,10 @@ void init(void)
 
 	/* Setting the relaxation parameters */
 
-	relax_u   = 0.8;             /* See eq. 6.36 */
+	//relax_u = 0.8;             /* See eq. 6.36 */ ### DONE WITH TEXT FILE ###
 	relax_v   = relax_u;       /* See eq. 6.37 */
 	relax_pc  = 1.1 - relax_u; /* See eq. 6.33 */
-	relax_T   = 1.0;  /* Relaxation factor for temperature */
+	//relax_T = 1.0;  /* Relaxation factor for temperature */ ### DONE WITH TEXT FILE ###
 
 } /* init */
 
@@ -1230,7 +1230,7 @@ void calc_uplus(void)
 /* ################################################################# */
 {
 /***** Purpose: Calculate uplus, yplus and tw  ******/
-// Pim: Calculation of uplus is needed for the source terms Su and Sp \\
+// Pim: Calculation of uplus is needed for the source terms Su and Sp 
 
 	int    i,j,I, J;
 	double Dx, Dy;
@@ -1561,9 +1561,16 @@ void readInput (char *name)
 	fscanf( fp, "%*s %lf", &YMAX );
 	fscanf( fp, "%*s %d", &NPI );
 	fscanf( fp, "%*s %d", &NPJ );
-	
+	fscanf( fp, "%*s %lf", &relax_u );
+	fscanf( fp, "%*s %lf", &relax_T );
+	fscanf( fp, "%*s %d", &MAX_ITER );
+	fscanf( fp, "%*s %lf", &TEMP );
+	fscanf( fp, "%*s %lf", &U_IN );
+
 	// print grid parameters
-	printf("From text file: XMAX= %f YMAX= %f NPI= %d NPJ= %d \n",XMAX,YMAX,NPI,NPJ);
+	printf("From text file:\nGrid: XMAX= %f [m] YMAX= %f [m] NPI= %d NPJ= %d \n",XMAX,YMAX,NPI,NPJ);
+	printf("Relaxation: relax_u= %3.1f relax_T= %3.1f MAX_ITER= %d\n",relax_u,relax_T,MAX_ITER);
+	printf("Temperature= %3.0f [K] U_IN= %3.1f [m/s]\n",TEMP,U_IN);
 
 	// Allocate memory to save constraints
 	CONS  = double_2D_matrix(NPI + 2, NPJ + 2);

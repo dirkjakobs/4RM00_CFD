@@ -1,7 +1,14 @@
+
+// ### VARIABLES IMPORTED FROM TEXT FILE ###
 double XMAX;
 double YMAX;
 int    NPI;
 int    NPJ;
+double relax_u;
+double relax_T;
+int    MAX_ITER;
+double TEMP;
+double U_IN;
 
 double *x;               /* x coordinate on pressure points [m] */
 double *x_u;             /* x coordinate on u-velocity points [m] */

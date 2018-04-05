@@ -22,7 +22,7 @@ set yrange [ 0 : 0.2 ] noreverse nowriteback
 #set zrange [ 0 : 0.8 ] noreverse nowriteback
 
 #Set equal scale along all three axis
-set view equal xy
+#set view equal xy
 
 #Labels:
 set xlabel "X axis" 
