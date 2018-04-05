@@ -1497,7 +1497,7 @@ void readInput (char *name)
 	CONS  = double_2D_matrix(NPI + 2, NPJ + 2);
 	
 	// Set allocated matrix to zero
-	for (int I = 0; I <= NPI + 1; I++) {
+	for (I = 0; I <= NPI + 1; I++) {
 		for (int J = 0; J <= NPJ + 1; J++)
 			CONS[I][J] = 0.;
 	}
