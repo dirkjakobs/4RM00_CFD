@@ -535,15 +535,36 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 
 			mus = 0.25*(mueff[I][J] + mueff[I-1][J] + mueff[I][J-1] + mueff[I-1][J-1]);
 			mun = 0.25*(mueff[I][J] + mueff[I-1][J] + mueff[I][J+1] + mueff[I-1][J+1]);
-
-			if(J == 1 || J==NPJ)
+			
+			// Calculate sourceterms for horizontal walls:
+			if(J == 1 || J==NPJ) {
+			
 				if(yplus[I][J] < 11.63)
 					SP[i][J]= -mu[I][J]*AREAs/(0.5*AREAw);
 				else
 					SP[i][J]=-rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus[I][J] * AREAs;
+			}
+			//################BEGIN SELF ADDED CODE################//
+			// Calculate sourceterm in u-direction:
+			if (CONS[I][J] == 2.) {
+				if(yplus_u[I][J] < 11.63)
+					SP[i][J]= -mu[I][J]*AREAs/(0.5*AREAw);
+				else
+					SP[i][J]= -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_u[I][J] * AREAs;
+			}
+  
+			// Calculate sourceterm in u-direction (for corners):
+			if (CONS[I][J] == 4.) {
+				// Calculate sourceterm in u-direction:
+				if(yplus_u[I][J] < 11.63)
+					SP[i][J]  = -mu[I][J]*AREAs/(0.5*AREAw);
+				else
+					SP[i][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_u[I][J] * AREAs;
+			}
+			//#################END SELF ADDED CODE#################//    
 			else
 				SP[i][J] = 0.;
-            
+
 			Su[i][J] = (mueff[I][J]*dudx[I][J] - mueff[I-1][J]*dudx[I-1][J]) / (x[I] - x[I-1]) + 
 			           (mun        *dvdx[i][j+1] - mus        *dvdx[i][j]) / (y_v[j+1] - y_v[j]) -
                        2./3. * (rho[I][J]*k[I][J] - rho[I-1][J]*k[I-1][J])/(x[I] - x[I-1]);
@@ -651,7 +672,28 @@ void vcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 
 			muw = 0.25*(mueff[I][J] + mueff[I-1][J] + mueff[I][J-1] + mueff[I-1][J-1]);
 			mue = 0.25*(mueff[I][J] + mueff[I+1][J] + mueff[I][J-1] + mueff[I+1][J-1]);
+		
+			//################BEGIN SELF ADDED CODE################//
+			// Calculate sourceterm in v-direction:
+			if (CONS[I][J] == 3.) {
+				if(yplus_v[I][J] < 11.63)
+					SP[i][J]  = -mu[I][J]*AREAw/(0.5*AREAs);
+				else
+					SP[i][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_v[I][J] * AREAw;
+			}
+			// Calculate sourceterm in v-direction (for corners):	
+			if (CONS[I][J] == 4.) {
+				// Calculate sourceterm in v-direction and add to sourceterm of u-direction:
+				if(yplus_v[I][J] < 11.63)
+					SP[i][J] += -mu[I][J]*AREAw/(0.5*AREAs);
+				else
+					SP[i][J] += -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_v[I][J] * AREAw;
+			}
+			else
+			// Set source terms to 0 if no vertical boundaries:
 			SP[I][j] = 0.;
+			//#################END SELF ADDED CODE#################// 
+				
 			Su[I][j] = (mueff[I][J]*dvdy[I][J] - mueff[I][J-1]*dvdy[I][J-1])/(y[J] - y[J-1]) + 
 			           (mue*dudy[i+1][j] - muw*dudy[i][j])/(x_u[i+1] - x_u[i]) - 
                        2./3. * (rho[I][J]*k[I][J] - rho[I][J-1]*k[I][J-1])/(y[J] - y[J-1]); 
@@ -1072,7 +1114,32 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
             if (J == 1 || J == NPJ) {
 				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus[I][J]/(0.5*AREAw) * AREAs * AREAw;
 				Su[I][J] = tw[I][J] * 0.5 * (u[i][J] + u[i+1][J])/(0.5*AREAw) * AREAs * AREAw;
-			}                 
+			}
+			
+			//################BEGIN SELF ADDED CODE################//
+			// Calculate sourceterm in u-direction:
+			if (CONS[I][J] == 2.) {
+				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_u[I][J]/(0.5*AREAw) * AREAs * AREAw;
+				Su[I][J] = tw[I][J] * 0.5 * (u[i][J] + u[i+1][J])/(0.5*AREAw) * AREAs * AREAw;
+			}
+			// Calculate sourceterm in v-direction:
+			if (CONS[I][J] == 3.) {
+				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_v[I][J]/(0.5*AREAs) * AREAs * AREAw;
+				Su[I][J] = tw[I][J] * 0.5 * (v[I][j] + v[I][j+1])/(0.5*AREAs) * AREAs * AREAw;
+			}
+			// Calculate sourceterm in u-direction and v-direction (for circular objects):
+			if (CONS[I][J] == 4.) {
+				// Calculate sourceterm in u-direction:
+				SP[I][J]  = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_u[I][J]/(0.5*AREAw) * AREAs * AREAw;
+				// Calculate sourceterm in v-direction and add to sourceterm:
+				SP[I][J] += -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_v[I][J]/(0.5*AREAs) * AREAs * AREAw;
+				// Calculate sourceterm in u-direction:
+				Su[I][J]  = tw[I][J] * 0.5 * (u[i][J] + u[i+1][J])/(0.5*AREAw) * AREAs * AREAw;
+				// Calculate sourceterm in v-direction and add to sourceterm:
+				Su[I][J] += tw[I][J] * 0.5 * (v[I][j] + v[I][j+1])/(0.5*AREAs) * AREAs * AREAw;
+			}
+			//#################END SELF ADDED CODE#################//                 
+			
 			else {
 				Su[I][J]  = 2. * mut[I][J] * E2[I][J];
 				SP[I][J]  = -rho[I][J] * eps[I][J] / k[I][J];
@@ -1497,8 +1564,8 @@ void readInput (char *name)
 	CONS  = double_2D_matrix(NPI + 2, NPJ + 2);
 	
 	// Set allocated matrix to zero
-	for (int I = 0; I <= NPI + 1; I++) {
-		for (int J = 0; J <= NPJ + 1; J++)
+	for (I = 0; I <= NPI + 1; I++) {
+		for (J = 0; J <= NPJ + 1; J++)
 			CONS[I][J] = 0.;
 	}
 	
