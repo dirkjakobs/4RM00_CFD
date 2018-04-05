@@ -1477,35 +1477,75 @@ void readInput (char *name)
 {
 
 	FILE        *fp;
-	int			nvec, ivec;
+	int			ncons, icons;
+	int			nyplus_u, iyplus_u;
+	int			nyplus_v, iyplus_v;
 	int 		I, J;
 	
 	// open file to read from
 	fp=fopen(name,"r");
 	
-	fscanf( fp, "%lf", &XMAX );
-	fscanf( fp, "%lf", &YMAX );
-	fscanf( fp, "%d", &NPI );
-	fscanf( fp, "%d", &NPJ );
-	fscanf( fp, "%d", &nvec );
+	fscanf( fp, "%*s %lf", &XMAX );
+	fscanf( fp, "%*s %lf", &YMAX );
+	fscanf( fp, "%*s %d", &NPI );
+	fscanf( fp, "%*s %d", &NPJ );
 	
-	printf("From text file: XMAX=%f YMAX=%f NPI=%d NPJ=%d ",XMAX,YMAX,NPI,NPJ);
-	printf("Constrains: %d\n",nvec);
-	
+	// print grid parameters
+	printf("From text file: XMAX= %f YMAX= %f NPI= %d NPJ= %d \n",XMAX,YMAX,NPI,NPJ);
+
 	// Allocate memory to save constraints
 	CONS  = double_2D_matrix(NPI + 2, NPJ + 2);
 	
 	// Set allocated matrix to zero
-	for (I = 0; I <= NPI + 1; I++) {
-		for (J = 0; J <= NPJ + 1; J++)
+	for (int I = 0; I <= NPI + 1; I++) {
+		for (int J = 0; J <= NPJ + 1; J++)
 			CONS[I][J] = 0.;
-	}	
-
+	}
+	
+	// ###########################################
+	// Get fully constrained points from text file
+	fscanf( fp, "%*s %d", &ncons );
+	
 	// loop through items in file	
-	for (ivec = 0; ivec < nvec; ivec++) {
-		fscanf( fp, "%d,%d", &I, &J);
+	for (icons = 0; icons < ncons; icons++) {
+		fscanf( fp, " %d  %d", &I, &J);
 		CONS[I][J] = 1.;
 	}
+
+	// Print results
+	printf("Constrains: %d ",ncons);
+
+	// ###########################################
+	// Get yplus_u points from text file
+	fscanf( fp, "%*s %d", &nyplus_u );
+
+	// loop through items in file	
+	for (iyplus_u = 0; iyplus_u < nyplus_u; iyplus_u++) {
+		fscanf( fp, " %d  %d", &I, &J);
+		CONS[I][J] = 2.;
+	}
+
+	// Print results
+	printf("yplus_u: %d ",nyplus_u);
+
+	// ###########################################
+	// Get yplus_v points from text file
+	fscanf( fp, "%*s %d", &nyplus_v );
+
+	// loop through items in file	
+	for (iyplus_v = 0; iyplus_v < nyplus_v; iyplus_v++) {
+		fscanf( fp, " %d  %d", &I, &J);
+		// if CONS[I][J] is already 2, then make it 4 instead of 3.
+		// then its in both yplus_u and yplus_v
+		if (CONS[I][J] == 2.) {
+			CONS[I][J] = 4.;
+		} else {
+			CONS[I][J] = 3.;
+		}
+	}
+
+	// Print results
+	printf("yplus_v: %d \n",nyplus_v);
 
 } /* readinput */
 
