@@ -4,6 +4,8 @@
 #define min2(a,b)   (a < b ? a : b)
 #define min3(a,b,c) (a < b ? min2(a,c) : min2(b,c))
 
+
+
 extern void readInput (char *name);
 
 extern void grid(void);

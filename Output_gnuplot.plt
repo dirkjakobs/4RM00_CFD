@@ -17,8 +17,8 @@ set style data lines
 set contour
 
 #Range of axis:
-set xrange [ 0 : 1.0 ] noreverse nowriteback
-set yrange [ 0 : 0.2 ] noreverse nowriteback
+#set xrange [ 0 : 1.0 ] noreverse nowriteback
+#set yrange [ 0 : 0.2 ] noreverse nowriteback
 #set zrange [ 0 : 0.8 ] noreverse nowriteback
 
 #Set equal scale along all three axis
