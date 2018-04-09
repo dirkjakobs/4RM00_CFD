@@ -204,21 +204,21 @@ void init(void)
 			//################BEGIN SELF ADDED CODE################//
 			// Set yplus and uplus to 1 (Can be optimised, put yplus in elsif below etc.)
 
-//			yplus_u [I][J] = 1.;
-//			yplus_v [I][J] = 1.;
-//			uplus_u [I][J] = 1.;
-//			uplus_v [I][J] = 1.;
-//			
-//			// Guess yplus near CONS		
-//			// Guess yplus_u:
-//	        if (CONS[I][J][1] == true) {
-//				yplus_u [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (0.5*Dy);
-//	        } /* if */
-//	        
-//	        // Guess yplus_v
-//	        if (CONS[I][J][2] == true) {
-//				yplus_v [I][J] = sqrt(rho[I][J] * v[I][J] / mu[I][J]) * (0.5*Dx);
-//	        } /* if */		
+			yplus_u [I][J] = 1.;
+			yplus_v [I][J] = 1.;
+			uplus_u [I][J] = 1.;
+			uplus_v [I][J] = 1.;
+			
+			// Guess yplus near CONS		
+			// Guess yplus_u:
+	        if (CONS[I][J][1] == true) {
+				yplus_u [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (0.5*Dy);
+	        } /* if */
+	        
+	        // Guess yplus_v
+	        if (CONS[I][J][2] == true) {
+				yplus_v [I][J] = sqrt(rho[I][J] * v[I][J] / mu[I][J]) * (0.5*Dx);
+	        } /* if */		
 			//#################END SELF ADDED CODE#################//
 			
 		} /* for J */
@@ -579,14 +579,14 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 				
 			//################BEGIN SELF ADDED CODE################//
 			// Calculate sourceterm in u-direction:
-//			if (CONS[I][J][1] == true) {
-//				if(yplus_u[I][J] < 11.63)
-//					SP[i][J]= -mu[I][J]*AREAs/(0.5*AREAw);
-//				else
-//					SP[i][J]= -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_u[I][J] * AREAs;
-//			}
-//			else
-//				SP[i][J] = 0.;
+			if (CONS[I][J][1] == true) {
+				if(yplus_u[I][J] < 11.63)
+					SP[i][J]= -mu[I][J]*AREAs/(0.5*AREAw);
+				else
+					SP[i][J]= -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_u[I][J] * AREAs;
+			}
+			else
+				SP[i][J] = 0.;
 			//#################END SELF ADDED CODE#################//   			
 
 			Su[i][J] = (mueff[I][J]*dudx[I][J] - mueff[I-1][J]*dudx[I-1][J]) / (x[I] - x[I-1]) + 
@@ -597,9 +597,9 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			//################BEGIN SELF ADDED CODE################//
 			// USE TEXTFILE DATA TO SET VELOCITY!
 
-//			if (CONS[i][J][0] == true) {
-//				SP[i][J] = - LARGE;
-//			}			
+			if (CONS[i][J][0] == true) {
+				SP[i][J] = - LARGE;
+			}			
 
 			//#################END SELF ADDED CODE#################//
 			
@@ -607,14 +607,16 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 
 			aW[i][J] = max3( Fw, Dw + 0.5*Fw, 0.);
 			aE[i][J] = max3(-Fe, De - 0.5*Fe, 0.);
-
-			if (J==1) aS[i][J]=0.;
+			
+			//################BEGIN SELF ADDED CODE################//
+			/* aS, check current position and for wall to the south (J-1) */
+			if (CONS[I][J][1] == true && CONS[I][J-1][0] == true) aS[i][J]=0.;
 			else      aS[i][J] = max3( Fs, Ds + 0.5*Fs, 0.);
             
-//			if (J==NPJ) aN[i][J] =0.;
-//			else        aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
-			
-			aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.); // PIM: added
+			/* aN, check current position and for wall to the north (J+1) */
+			if (CONS[I][J][1] == true && CONS[I][J+1][0] == true) aN[i][J] =0.;
+			else        aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
+			//#################END SELF ADDED CODE#################//
             
 			aPold    = 0.5*(rho[I-1][J] + rho[I][J])*AREAe*AREAn/Dt;
 
@@ -703,14 +705,14 @@ void vcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 
 			//################BEGIN SELF ADDED CODE################//
 			// Calculate sourceterm in v-direction:
-//			if (CONS[I][J][2] == true) {
-//				if(yplus_v[I][J] < 11.63)
-//					SP[i][J]  = -mu[I][J]*AREAw/(0.5*AREAs);
-//				else
-//					SP[i][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_v[I][J] * AREAw;
-//			}
-//			// Set source terms to 0 if no vertical boundaries:
-//			else
+			if (CONS[I][J][2] == true) {
+				if(yplus_v[I][J] < 11.63)
+					SP[i][J]  = -mu[I][J]*AREAw/(0.5*AREAs);
+				else
+					SP[i][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_v[I][J] * AREAw;
+			}
+			// Set source terms to 0 if no vertical boundaries:
+			else
 				SP[I][j] = 0.;
 			//#################END SELF ADDED CODE#################// 
 
@@ -730,7 +732,7 @@ void vcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 
 			/* The coefficients (hybrid differencing scheme) */
 
-			aW[I][j] = max3( Fw, Dw + 0.5*Fw, 0.);
+			aW[I][j] = max3( Fw, Dw + 0.5*Fw, 0.); //### DIRK: ADD same as north/south at ucoeff
 			aE[I][j] = max3(-Fe, De - 0.5*Fe, 0.);
 			aS[I][j] = max3( Fs, Ds + 0.5*Fs, 0.);
 			aN[I][j] = max3(-Fn, Dn - 0.5*Fn, 0.);
@@ -1039,16 +1041,33 @@ void epscoeff(double **aE, double **aW, double **aN, double **aS, double **aP, d
 			Ds = mut[I  ][J-1]*mut[I  ][J  ]/sigmaeps/(mut[I  ][J-1]*(y[J  ] - y_v[j  ]) + mut[I  ][J  ]*(y_v[j  ] - y[J-1]))*AREAs;
 			Dn = mut[I  ][J  ]*mut[I  ][J+1]/sigmaeps/(mut[I  ][J  ]*(y[J+1] - y_v[j+1]) + mut[I  ][J+1]*(y_v[j+1] - y[J  ]))*AREAn;
 
-		 /* The source terms */
+			/* The source terms */
+			//################BEGIN SELF ADDED CODE################//
 
-			if (J==1){// || J==NPJ) {
+			// Calculate sourceterm in u-direction:
+			if (CONS[I][J][1] == true) {
 				SP[I][J] = -LARGE;
 				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*0.5*AREAw)*LARGE;
+			}
+			// Calculate sourceterm in v-direction:
+			else if (CONS[I][J][2] == true) {
+				SP[I][J] = -LARGE;
+				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*0.5*AREAe)*LARGE;
 			}
 			else {
 				Su[I][J] = C1eps * eps[I][J] / k[I][J] * 2. * mut[I][J] * E2[I][J];
 				SP[I][J] = -C2eps * rho[I][J] * eps[I][J] / (k[I][J] + SMALL);
 			}
+			//#################END SELF ADDED CODE#################// 
+			
+//			if (J==1 || J==NPJ) {
+//				SP[I][J] = -LARGE;
+//				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*0.5*AREAw)*LARGE;
+//			}
+//			else {
+//				Su[I][J] = C1eps * eps[I][J] / k[I][J] * 2. * mut[I][J] * E2[I][J];
+//				SP[I][J] = -C2eps * rho[I][J] * eps[I][J] / (k[I][J] + SMALL);
+//			}
                                   
 			Su[I][J] *= AREAw*AREAs;
 			SP[I][J] *= AREAw*AREAs;
@@ -1139,28 +1158,32 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 
             /* The source terms */
             // Source terms for horizontal walls:
+			
+//            if (J == 1 || J == NPJ) {
+//				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus[I][J]/(0.5*AREAw) * AREAs * AREAw;
+//				Su[I][J] = tw[I][J] * 0.5 * (u[i][J] + u[i+1][J])/(0.5*AREAw) * AREAs * AREAw;
+//			}
+//			else {
+//				Su[I][J]  = 2. * mut[I][J] * E2[I][J];
+//				SP[I][J]  = -rho[I][J] * eps[I][J] / k[I][J];
+//			}
 
-            if (J == 1){// || J == NPJ) {
-				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus[I][J]/(0.5*AREAw) * AREAs * AREAw;
+			//################BEGIN SELF ADDED CODE################//
+
+			// Calculate sourceterm in u-direction:
+			if (CONS[I][J][1] == true) {
+				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_u[I][J]/(0.5*AREAw) * AREAs * AREAw;
 				Su[I][J] = tw[I][J] * 0.5 * (u[i][J] + u[i+1][J])/(0.5*AREAw) * AREAs * AREAw;
+			}
+			// Calculate sourceterm in v-direction:
+			else if (CONS[I][J][2] == true) {
+				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_v[I][J]/(0.5*AREAs) * AREAs * AREAw;
+				Su[I][J] = tw[I][J] * 0.5 * (v[I][j] + v[I][j+1])/(0.5*AREAs) * AREAs * AREAw;
 			}
 			else {
 				Su[I][J]  = 2. * mut[I][J] * E2[I][J];
 				SP[I][J]  = -rho[I][J] * eps[I][J] / k[I][J];
 			}
-
-			//################BEGIN SELF ADDED CODE################//
-
-//			// Calculate sourceterm in u-direction:
-//			if (CONS[I][J][1] == true) {
-//				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_u[I][J]/(0.5*AREAw) * AREAs * AREAw;
-//				Su[I][J] = tw[I][J] * 0.5 * (u[i][J] + u[i+1][J])/(0.5*AREAw) * AREAs * AREAw;
-//			}
-//			// Calculate sourceterm in v-direction:
-//			else if (CONS[I][J][2] == true) {
-//				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_v[I][J]/(0.5*AREAs) * AREAs * AREAw;
-//				Su[I][J] = tw[I][J] * 0.5 * (v[I][j] + v[I][j+1])/(0.5*AREAs) * AREAs * AREAw;
-//			}
 			//#################END SELF ADDED CODE#################//                 
 			
  			Su[I][j] *= AREAw*AREAs;
@@ -1168,16 +1191,24 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 
 			/* The coefficients (hybrid differencing sheme) */
 
-			aW[I][J] = max3( Fw, Dw + 0.5*Fw, 0.);
+			aW[I][J] = max3( Fw, Dw + 0.5*Fw, 0.); ///### DIRK: SHOULD BE 0 NEAR WALL!
 			aE[I][J] = max3(-Fe, De - 0.5*Fe, 0.);
             
-            if (J == 1) aS[i][J] = 0;
-			else        aS[i][J] = max3( Fs, Ds + 0.5*Fs, 0.);
+			//################BEGIN SELF ADDED CODE################//
+			/* aS, check current position and for wall to the south (J-1) */
+			if (CONS[I][J][1] == true && CONS[I][J-1][0] == true) aS[i][J]=0.;
+			else      aS[i][J] = max3( Fs, Ds + 0.5*Fs, 0.);
+            
+			/* aN, check current position and for wall to the north (J+1) */
+			if (CONS[I][J][1] == true && CONS[I][J+1][0] == true) aN[i][J] =0.;
+			else        aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
+			//#################END SELF ADDED CODE#################//
+						
+//          if (J == 1) aS[i][J] = 0;
+//			else        aS[i][J] = max3( Fs, Ds + 0.5*Fs, 0.);
             
 //			if (J == NPJ) aN[i][J] = 0;
 //			else          aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
-			
-			aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
             
             aPold    = rho[I][J]*AREAe*AREAn/Dt;
 
@@ -1249,7 +1280,7 @@ void calc_uplus(void)
 /***** Purpose: Calculate uplus, yplus and tw  ******/
 // Pim: Calculation of uplus is needed for the source terms Su and Sp 
 
-	int    i,j,I, J;
+	int    i, j, I, J;
 	double Dx, Dy;
 	
 //	viscosity();
@@ -1263,10 +1294,6 @@ void calc_uplus(void)
 		i = I;
 		for (J = Jstart; J <= Jend; J++) {
 			j = J;
-	        
-	        //if (CONS[I][J] == 1.) {
-	        // Do nothing: set v = 0 ; u = 0 ; T = Tref
-	    	//} /* if */
 	    	
 	    	// Calculate: yplus_u
 	        if (CONS[I][J][1] == true) {
