@@ -162,8 +162,8 @@ void init(void)
 	Dy = YMAX/NPJ;
 	//#################END SELF ADDED CODE#################//
 
-	m_in  = 1.;
-	m_out = 1.;
+	m_in  = 1.; // PIM: Waarom init 1? In globcont() wordt deze weer op nul gezet?
+	m_out = 1.; // PIM: Waarom init 1? In globcont() wordt deze weer op nul gezet?
 	Dt    = 1.E-1;
 
 	for (I = 0; I <= NPI + 1; I++) {
@@ -536,15 +536,17 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			mus = 0.25*(mueff[I][J] + mueff[I-1][J] + mueff[I][J-1] + mueff[I-1][J-1]);
 			mun = 0.25*(mueff[I][J] + mueff[I-1][J] + mueff[I][J+1] + mueff[I-1][J+1]);
 			
-			/* Calculate sourceterms for horizontal walls:
-			if(J == 1 || J==NPJ) {
+			// Calculate sourceterms for horizontal walls:
+//			if(J == 1 || J==NPJ) {
+//			
+//				if(yplus[I][J] < 11.63)
+//					SP[i][J]= -mu[I][J]*AREAs/(0.5*AREAw);
+//				else
+//					SP[i][J]=-rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus[I][J] * AREAs;
+//			}
+//			else
+//				SP[i][J] = 0.;			
 			
-				if(yplus[I][J] < 11.63)
-					SP[i][J]= -mu[I][J]*AREAs/(0.5*AREAw);
-				else
-					SP[i][J]=-rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus[I][J] * AREAs;
-			}*/
-
 			//################BEGIN SELF ADDED CODE################//
 			// Calculate sourceterm in u-direction:
 			if (CONS[I][J] == 2.) {
@@ -562,9 +564,9 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 				else
 					SP[i][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_u[I][J] * AREAs;
 			}
-			//#################END SELF ADDED CODE#################//    
 			else
 				SP[i][J] = 0.;
+			//#################END SELF ADDED CODE#################//    
 
 			Su[i][J] = (mueff[I][J]*dudx[I][J] - mueff[I-1][J]*dudx[I-1][J]) / (x[I] - x[I-1]) + 
 			           (mun        *dvdx[i][j+1] - mus        *dvdx[i][j]) / (y_v[j+1] - y_v[j]) -
@@ -690,9 +692,9 @@ void vcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 				else
 					SP[i][J] += -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_v[I][J] * AREAw;
 			}
-			else
 			// Set source terms to 0 if no vertical boundaries:
-			SP[I][j] = 0.;
+			else
+				SP[I][j] = 0.;
 			//#################END SELF ADDED CODE#################// 
 				
 			Su[I][j] = (mueff[I][J]*dvdy[I][J] - mueff[I][J-1]*dvdy[I][J-1])/(y[J] - y[J-1]) + 
@@ -926,10 +928,10 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			Ds = Gamma[I  ][J-1]*Gamma[I  ][J  ]/(Gamma[I  ][J-1]*(y[J  ] - y_v[j  ]) + Gamma[I  ][J  ]*(y_v[j  ] - y[J-1]))*AREAs;
 			Dn = Gamma[I  ][J  ]*Gamma[I  ][J+1]/(Gamma[I  ][J  ]*(y[J+1] - y_v[j+1]) + Gamma[I  ][J+1]*(y_v[j+1] - y[J  ]))*AREAn;
 
-			/* The source terms */
+			/* The source terms, page 278 */
 
-			SP[I][J] = 0.;
-			Su[I][J] = 0.;
+			SP[I][J] = 0.;	// PIM: for adiabatic walls
+			Su[I][J] = 0.;  // PIM: for adiabatic walls
 
 			/* The coefficients (hybrid differencing scheme) */
 
@@ -1079,6 +1081,7 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 	conv();
     viscosity();
     calculateuplus();
+//    calc_uplus();
     
 	for (I = Istart; I <= Iend; I++) {
 		i = I;
@@ -1112,10 +1115,11 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			Dn = mut[I  ][J  ]*mut[I  ][J+1]/sigmak/(mut[I  ][J  ]*(y[J+1] - y_v[j+1]) + mut[I  ][J+1]*(y_v[j+1] - y[J  ]))*AREAn;
 
             /* The source terms */
-            if (J == 1 || J == NPJ) {
-				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus[I][J]/(0.5*AREAw) * AREAs * AREAw;
-				Su[I][J] = tw[I][J] * 0.5 * (u[i][J] + u[i+1][J])/(0.5*AREAw) * AREAs * AREAw;
-			}
+            // Source terms for horizontal walls:
+//            if (J == 1 || J == NPJ) {
+//				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus[I][J]/(0.5*AREAw) * AREAs * AREAw;
+//				Su[I][J] = tw[I][J] * 0.5 * (u[i][J] + u[i+1][J])/(0.5*AREAw) * AREAs * AREAw;
+//			}
 			
 			//################BEGIN SELF ADDED CODE################//
 			// Calculate sourceterm in u-direction:

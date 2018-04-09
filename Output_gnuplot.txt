@@ -17,8 +17,8 @@ set style data lines
 set contour
 
 #Range of axis:
-#set xrange [ 0 : 2.0 ] noreverse nowriteback
-#set yrange [ 0 : 0.2 ] noreverse nowriteback
+set xrange [ 0 : 0.5 ] noreverse nowriteback
+set yrange [ 0 : 0.2 ] noreverse nowriteback
 #set zrange [ 0 : 0.8 ] noreverse nowriteback
 
 #Set equal scale along all three axis
@@ -34,10 +34,15 @@ set zlabel  offset character -3, 0, 0 font "" textcolor lt -1 norotate
 
 #Plot comluns form .dat file:
 
-splot 'output.dat' using 1:2:3 with pm3d
+#splot 'output.dat' using 1:2:6 with pm3d
 
+<<<<<<< HEAD
 scale = 1
 #plot 'output.dat' using 1:2:($3*scale):($4*scale) with vectors head filled lw 2
+=======
+scale = 0.2
+plot 'output.dat' using 1:2:($3*scale):($4*scale) with vectors head filled lw 2
+>>>>>>> 6de93e5dcb87d8c19749934d6e88c56d8895ed35
 
 
 #Check sneltoetsen van gnuplot:
