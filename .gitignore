@@ -4,4 +4,4 @@
 !*.h
 !*.xlsm
 !*.md
-!/Output_gnuplot.txt
+!*.plt

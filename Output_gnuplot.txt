@@ -36,7 +36,7 @@ set zlabel  offset character -3, 0, 0 font "" textcolor lt -1 norotate
 
 splot 'output.dat' using 1:2:3 with pm3d
 
-scale = 0.2
+scale = 1
 #plot 'output.dat' using 1:2:($3*scale):($4*scale) with vectors head filled lw 2
 
 

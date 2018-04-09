@@ -772,7 +772,7 @@ void pccoeff(double **aE, double **aW, double **aN, double **aS, double **aP, do
 		for (J = Jstart; J <= Jend; J++) {
 			j = J;
 
-			/* Geometrical parameters */
+			/* Geometrical parameters */	
 			/* Areas of the cell faces */
 
 			AREAw = y_v[j+1] - y_v[j]; /* = A[i][J] See fig. 6.2 or fig. 6.5 */
@@ -1560,14 +1560,23 @@ void readInput (char *name)
 	fscanf( fp, "%*s %lf", &relax_u );
 	fscanf( fp, "%*s %lf", &relax_T );
 	fscanf( fp, "%*s %d", &MAX_ITER );
+	fscanf( fp, "%*s %d", &U_ITER );
+	fscanf( fp, "%*s %d", &V_ITER );
+	fscanf( fp, "%*s %d", &PC_ITER );
+	fscanf( fp, "%*s %d", &T_ITER );
+	fscanf( fp, "%*s %d", &EPS_ITER );
+	fscanf( fp, "%*s %d", &K_ITER );
 	fscanf( fp, "%*s %lf", &TEMP );
 	fscanf( fp, "%*s %lf", &U_IN );
 
 	// print grid parameters
-	printf("From text file:\nGrid: XMAX= %f [m] YMAX= %f [m] NPI= %d NPJ= %d \n",XMAX,YMAX,NPI,NPJ);
-	printf("Relaxation: relax_u= %3.1f relax_T= %3.1f MAX_ITER= %d\n",relax_u,relax_T,MAX_ITER);
-	printf("Temperature= %3.0f [K] U_IN= %3.1f [m/s]\n",TEMP,U_IN);
-
+	printf("From text file:\nGrid:           XMAX = %4.2f [m]     YMAX = %4.2f [m]\n",XMAX,YMAX);
+	printf("                 NPI =  %3d          NPJ =  %3d\n",NPI,NPJ);
+	printf("Relaxation:  relax_u = %4.2f      relax_T = %4.2f\n",relax_u,relax_T);
+	printf("Iterations: MAX_ITER = %4d       U_ITER = %4d       V_ITER = %4d\n",MAX_ITER,   U_ITER, V_ITER);
+	printf("             PC_ITER = %4d     EPS_ITER = %4d       K_ITER = %4d\n", PC_ITER, EPS_ITER, K_ITER);
+	printf("Physics:       Temp. =  %3.0f [K]     U_IN =  %3.1f [m/s]\n",TEMP,U_IN);
+	
 	// Allocate memory to save constraints
 	CONS  = double_2D_matrix(NPI + 2, NPJ + 2);
 	
@@ -1588,7 +1597,7 @@ void readInput (char *name)
 	}
 
 	// Print results
-	printf("Constrains: %d ",ncons);
+	printf("Constrains:    Fixed = %4d ",ncons);
 
 	// ###########################################
 	// Get yplus_u points from text file
@@ -1601,7 +1610,7 @@ void readInput (char *name)
 	}
 
 	// Print results
-	printf("yplus_u: %d ",nyplus_u);
+	printf("     yplus_u = %4d ",nyplus_u);
 
 	// ###########################################
 	// Get yplus_v points from text file
@@ -1620,7 +1629,8 @@ void readInput (char *name)
 	}
 
 	// Print results
-	printf("yplus_v: %d \n",nyplus_v);
+	printf("     yplus_v = %4d \n",nyplus_v);
+	printf("\n");
 
 } /* readinput */
 

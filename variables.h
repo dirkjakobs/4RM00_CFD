@@ -7,6 +7,13 @@ int    NPJ;
 double relax_u;
 double relax_T;
 int    MAX_ITER;
+int    U_ITER;
+int    V_ITER;
+int    PC_ITER;
+int    T_ITER;
+int    EPS_ITER;
+int    K_ITER;
+
 double TEMP;
 double U_IN;
 
