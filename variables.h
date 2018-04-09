@@ -1,12 +1,16 @@
 
+
 // ### VARIABLES IMPORTED FROM TEXT FILE ###
+
+typedef enum { false, true } bool;
+bool ***CONS;
+
 double XMAX;
 double YMAX;
 int    NPI;
 int    NPJ;
 double relax_u;
 double relax_T;
-double Dt;
 int    MAX_ITER;
 int    U_ITER;
 int    V_ITER;
@@ -14,6 +18,11 @@ int    PC_ITER;
 int    T_ITER;
 int    EPS_ITER;
 int    K_ITER;
+double rho_init;
+double mu_init;
+double Cp_init;
+double K_init;
+double Gamma_init;
 
 double TEMP;
 double U_IN;
@@ -96,7 +105,6 @@ double *relax;
 double omega;
 
 // SELF ADDED VARIABLES
-double **CONS;
 double **yplus_u;
 double **yplus_v;
 double **uplus_u;
