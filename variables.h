@@ -6,6 +6,7 @@ int    NPI;
 int    NPJ;
 double relax_u;
 double relax_T;
+double Dt;
 int    MAX_ITER;
 int    U_ITER;
 int    V_ITER;

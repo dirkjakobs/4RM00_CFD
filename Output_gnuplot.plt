@@ -17,8 +17,8 @@ set style data lines
 set contour
 
 #Range of axis:
-set xrange [ 0 : 1.0 ] noreverse nowriteback
-set yrange [ 0 : 0.2 ] noreverse nowriteback
+#set xrange [ 0 : 1.0 ] noreverse nowriteback
+#set yrange [ 0 : 0.2 ] noreverse nowriteback
 #set zrange [ 0 : 0.8 ] noreverse nowriteback
 
 #Set equal scale along all three axis
@@ -44,7 +44,7 @@ scale = 0.15
 #show bind
 
 ### Start multiplot 
-set multiplot layout 2,2 rowsfirst
+set multiplot layout 1,1 rowsfirst
 
 #set label 1 'ugrid' at graph 0.0,0.0,0.0 font ',16'
 
@@ -71,7 +71,7 @@ set multiplot layout 2,2 rowsfirst
 
 #splot 'output.dat' using 1:2:13 with pm3d # --- GRAPH: yplus
 
-#splot 'output.dat' using 1:2:14 with pm3d # --- GRAPH: yplus1 / yplus_u
+splot 'output.dat' using 1:2:14 with pm3d # --- GRAPH: yplus1 / yplus_u
 
 #splot 'output.dat' using 1:2:15 with pm3d # --- GRAPH: yplus2 / yplus_v
 
@@ -79,13 +79,13 @@ set multiplot layout 2,2 rowsfirst
 
 #splot 'output.dat' using 1:2:17 with pm3d # --- GRAPH: -      / uplus_v
 
-splot 'vort.dat' using 1:2:3 with pm3d # --- GRAPH: x[I], y[J], vorticity
+#splot 'vort.dat' using 1:2:3 with pm3d # --- GRAPH: x[I], y[J], vorticity
 
-splot 'str.dat' using 1:2:3 with pm3d # --- GRAPH: x[I], y[J], stream
+#splot 'str.dat' using 1:2:3 with pm3d # --- GRAPH: x[I], y[J], stream
 
-splot 'velu.dat' using 1:2:3 with pm3d # --- GRAPH: x_u[i], y[J], u[i][J]
+#splot 'velu.dat' using 1:2:3 with pm3d # --- GRAPH: x_u[i], y[J], u[i][J]
 
-splot 'velv.dat' using 1:2:3 with pm3d # --- GRAPH: x[I], y_v[j], v[I][j]
+#splot 'velv.dat' using 1:2:3 with pm3d # --- GRAPH: x[I], y_v[j], v[I][j]
 
 unset multiplot
 ### End multiplot

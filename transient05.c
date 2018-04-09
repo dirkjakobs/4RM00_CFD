@@ -164,13 +164,13 @@ void init(void)
 
 	m_in  = 1.; // PIM: Waarom init 1? In globcont() wordt deze weer op nul gezet?
 	m_out = 1.; // PIM: Waarom init 1? In globcont() wordt deze weer op nul gezet?
-	Dt    = 1.E-1;
 
 	for (I = 0; I <= NPI + 1; I++) {
 		i = I;
 		for (J = 0; J <= NPJ + 1; J++) {
 			j = J;
-			u      [i][J] = U_IN*1.5*(1.-sqr(2.*(y[J]-YMAX/2.)/YMAX));     /* Velocity in x-direction */
+//			u      [i][J] = U_IN*1.5*(1.-sqr(2.*(y[J]-YMAX/2.)/YMAX));     /* Velocity in x-direction */
+			u      [i][J] = U_IN;
 			v      [I][j] = 0.;       /* Velocity in y-direction */
 			p      [I][J] = 0.;       /* Relative pressure */
 			T      [I][J] = 273.;     /* Temperature */
@@ -241,8 +241,8 @@ void bound(void)
 
 	for (J = 0; J <= NPJ + 1; J++) {
 		/* Temperature at the walls in Kelvin */
-//		u[1][J] = U_IN; /* inlet */
-		u[1][J] = U_IN*1.5*(1.-sqr(2.*(y[J]-YMAX/2.)/YMAX)); /* inlet */
+		u[1][J] = U_IN; /* inlet */
+//		u[1][J] = U_IN*1.5*(1.-sqr(2.*(y[J]-YMAX/2.)/YMAX)); /* inlet */
 	} /* for J */
 
 	for (I = 0; I <= NPI + 1; I++) {
@@ -1595,6 +1595,7 @@ void readInput (char *name)
 	fscanf( fp, "%*s %d", &NPJ );
 	fscanf( fp, "%*s %lf", &relax_u );
 	fscanf( fp, "%*s %lf", &relax_T );
+	fscanf( fp, "%*s %lf", &Dt );
 	fscanf( fp, "%*s %d", &MAX_ITER );
 	fscanf( fp, "%*s %d", &U_ITER );
 	fscanf( fp, "%*s %d", &V_ITER );
@@ -1608,7 +1609,7 @@ void readInput (char *name)
 	// print grid parameters
 	printf("From text file:\nGrid:           XMAX = %4.2f [m]     YMAX = %4.2f [m]\n",XMAX,YMAX);
 	printf("                 NPI =  %3d          NPJ =  %3d\n",NPI,NPJ);
-	printf("Relaxation:  relax_u = %4.2f      relax_T = %4.2f\n",relax_u,relax_T);
+	printf("Solver:     relax_u = %4.2f      relax_T = %4.2f Dt = %7.1e \n",relax_u,relax_T, Dt);
 	printf("Iterations: MAX_ITER = %4d       U_ITER = %4d       V_ITER = %4d\n",MAX_ITER,   U_ITER, V_ITER);
 	printf("             PC_ITER = %4d     EPS_ITER = %4d       K_ITER = %4d\n", PC_ITER, EPS_ITER, K_ITER);
 	printf("Physics:       Temp. =  %3.0f [K]     U_IN =  %3.1f [m/s]\n",TEMP,U_IN);
