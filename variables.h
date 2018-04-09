@@ -100,6 +100,8 @@ double **yplus_u;
 double **yplus_v;
 double **uplus_u;
 double **uplus_v;
+double **lambda;
+double **p_abs;
 
 
 

@@ -24,3 +24,4 @@
 #define Ti         0.04
 
 //#define TEMP     320.      /* temeperature of constrained parts! */ ### FROM TEXT FILE ###
+#define GAS_CONS   8314.4    /* Gas constant R */

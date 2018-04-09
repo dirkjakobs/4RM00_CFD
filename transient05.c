@@ -63,8 +63,12 @@ int main(int argc, char *argv[])
 			for (iter_T = 0; iter_T < T_ITER; iter_T++)
 				solve(T, b, aE, aW, aN, aS, aP);
 
-			viscosity();
+			viscosity(); // PIM: Moved to properties()
 
+			//################BEGIN SELF ADDED CODE################//	
+//			properties(); // Including viscosity();
+			//#################END SELF ADDED CODE#################//
+			
 			bound();
 			storeresults(); /* Store data at current time level in arrays for "old" data*/
 
@@ -76,6 +80,10 @@ int main(int argc, char *argv[])
 		/* reset SMAX and SAVG */
 		SMAX = LARGE;
 		SAVG = LARGE;
+
+		//################BEGIN SELF ADDED CODE################//	
+//		animation(time);
+		//#################END SELF ADDED CODE#################//
 
 	} /* for Dt */
 	output();
@@ -170,15 +178,16 @@ void init(void)
 		i = I;
 		for (J = 0; J <= NPJ + 1; J++) {
 			j = J;
-			u      [i][J] = U_IN*1.5*(1.-sqr(2.*(y[J]-YMAX/2.)/YMAX));     /* Velocity in x-direction */
+//			u      [i][J] = U_IN*1.5*(1.-sqr(2.*(y[J]-YMAX/2.)/YMAX));     /* Guess velocity profile in x-direction */
+			u      [i][J] = U_IN;
 			v      [I][j] = 0.;       /* Velocity in y-direction */
 			p      [I][J] = 0.;       /* Relative pressure */
 			T      [I][J] = 273.;     /* Temperature */
 			k      [I][J] = 1e-3;     /* k */
 			eps    [I][J] = 1e-4;     /* epsilon */
 			uplus  [I][J] = 1.;                                            /* uplus */
-//			yplus1 [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (y[1] - y[0]);   /* yplus1 */
-//			yplus2 [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (y[NPJ+1] - y[NPJ]);   /* yplus2 */
+			yplus1 [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (y[1] - y[0]);   /* yplus1 */
+			yplus2 [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (y[NPJ+1] - y[NPJ]);   /* yplus2 */
 			yplus  [I][J] = 1.;                                            /* yplus*/
 			tw     [I][J] = 5.;                                                /* tw */
 			rho    [I][J] = 1.0;      /* Density */
@@ -195,28 +204,28 @@ void init(void)
 			
 			//################BEGIN SELF ADDED CODE################//
 			// Set yplus and uplus to 1 (Can be optimised, put yplus in elsif below etc.)
-			yplus_u [I][J] = 1.;
-			yplus_v [I][J] = 1.;
-			uplus_u [I][J] = 1.;
-			uplus_v [I][J] = 1.;
-			
-			// Guess yplus near CONS		
-			// Guess yplus_u:
-	        if (CONS[I][J] == 2.) {
-				yplus_u [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (0.5*Dy);
-	        } /* if */
-	        
-	        // Guess yplus_v
-	        if (CONS[I][J] == 3.) {
-				yplus_v [I][J] = sqrt(rho[I][J] * v[I][J] / mu[I][J]) * (0.5*Dx);
-	        } /* if */
-	        
-	        // Guess yplus_u + yplus_v
-	        if (CONS[I][J] == 4.){
-				yplus_u [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (0.5*Dy);
-				yplus_v [I][J] = sqrt(rho[I][J] * v[I][J] / mu[I][J]) * (0.5*Dx);
-	        } /* if */			
-			//#################END SELF ADDED CODE#################//
+//			yplus_u [I][J] = 1.;
+//			yplus_v [I][J] = 1.;
+//			uplus_u [I][J] = 1.;
+//			uplus_v [I][J] = 1.;
+//			
+//			// Guess yplus near CONS		
+//			// Guess yplus_u:
+//	        if (CONS[I][J] == 2.) {
+//				yplus_u [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (0.5*Dy);
+//	        } /* if */
+//	        
+//	        // Guess yplus_v
+//	        if (CONS[I][J] == 3.) {
+//				yplus_v [I][J] = sqrt(rho[I][J] * v[I][J] / mu[I][J]) * (0.5*Dx);
+//	        } /* if */
+//	        
+//	        // Guess yplus_u + yplus_v
+//	        if (CONS[I][J] == 4.){
+//				yplus_u [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (0.5*Dy);
+//				yplus_v [I][J] = sqrt(rho[I][J] * v[I][J] / mu[I][J]) * (0.5*Dx);
+//	        } /* if */			
+//			//#################END SELF ADDED CODE#################//
 			
 		} /* for J */
 	} /* for I */
@@ -235,14 +244,14 @@ void bound(void)
 /* ################################################################# */
 {
 /***** Purpose: Specify boundary conditions for a calculation ******/
-	int    I, J, j;
+	int    I, J, i, j;
 
 	/* Fixed temperature at the upper and lower wall */
 
 	for (J = 0; J <= NPJ + 1; J++) {
 		/* Temperature at the walls in Kelvin */
-//		u[1][J] = U_IN; /* inlet */
-		u[1][J] = U_IN*1.5*(1.-sqr(2.*(y[J]-YMAX/2.)/YMAX)); /* inlet */
+		u[1][J] = U_IN; /* inlet */
+//		u[1][J] = U_IN*1.5*(1.-sqr(2.*(y[J]-YMAX/2.)/YMAX)); /* inlet */
 	} /* for J */
 
 	for (I = 0; I <= NPI + 1; I++) {
@@ -272,6 +281,26 @@ void bound(void)
 		k[0][J] = 2./3.*sqr(U_IN*Ti); /* inlet */
 		eps[0][J] = pow(Cmu,0.75)*pow(k[0][J],1.5)/(0.07*YMAX*0.5); /* inlet */
 	} /* for J */
+	
+	//################BEGIN SELF ADDED CODE################//
+		
+	  /* Upper boundary */
+	for (I = 1; I <= NPI + 1; I++) {
+		i = I;
+		/* Correction factor m_in/m_out is used to satisfy global continuity########################## might need an eddit ###########################################*/
+		u[i][NPJ+1] = u[i][NPJ];
+		v[I][NPJ+1] = v[I][NPJ];
+		k[I][NPJ+1] = k[I][NPJ];
+		eps[I][NPJ+1] = eps[I][NPJ];
+	} /* for J */
+	
+	/* Upper boundary temperature gradient is set to 0 */
+	for (I = 0; I <= NPI + 1; I++) {
+		T[I][NPJ+1] = T[I][NPJ]; /* upper boundary */
+	} /* for J */
+	
+	//#################END SELF ADDED CODE#################//
+
 
 } /* bound */
 
@@ -537,36 +566,36 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			mun = 0.25*(mueff[I][J] + mueff[I-1][J] + mueff[I][J+1] + mueff[I-1][J+1]);
 			
 			// Calculate sourceterms for horizontal walls:
-//			if(J == 1 || J==NPJ) {
-//			
-//				if(yplus[I][J] < 11.63)
-//					SP[i][J]= -mu[I][J]*AREAs/(0.5*AREAw);
-//				else
-//					SP[i][J]=-rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus[I][J] * AREAs;
-//			}
-//			else
-//				SP[i][J] = 0.;			
+			if(J == 1){// || J==NPJ) {
 			
-			//################BEGIN SELF ADDED CODE################//
-			// Calculate sourceterm in u-direction:
-			if (CONS[I][J] == 2.) {
-				if(yplus_u[I][J] < 11.63)
+				if(yplus[I][J] < 11.63)
 					SP[i][J]= -mu[I][J]*AREAs/(0.5*AREAw);
 				else
-					SP[i][J]= -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_u[I][J] * AREAs;
-			}
-  
-			// Calculate sourceterm in u-direction (for corners):
-			if (CONS[I][J] == 4.) {
-				// Calculate sourceterm in u-direction:
-				if(yplus_u[I][J] < 11.63)
-					SP[i][J]  = -mu[I][J]*AREAs/(0.5*AREAw);
-				else
-					SP[i][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_u[I][J] * AREAs;
+					SP[i][J]=-rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus[I][J] * AREAs;
 			}
 			else
-				SP[i][J] = 0.;
-			//#################END SELF ADDED CODE#################//    
+				SP[i][J] = 0.;			
+			
+//			//################BEGIN SELF ADDED CODE################//
+//			// Calculate sourceterm in u-direction:
+//			if (CONS[I][J] == 2.) {
+//				if(yplus_u[I][J] < 11.63)
+//					SP[i][J]= -mu[I][J]*AREAs/(0.5*AREAw);
+//				else
+//					SP[i][J]= -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_u[I][J] * AREAs;
+//			}
+//  
+//			// Calculate sourceterm in u-direction (for corners):
+//			if (CONS[I][J] == 4.) {
+//				// Calculate sourceterm in u-direction:
+//				if(yplus_u[I][J] < 11.63)
+//					SP[i][J]  = -mu[I][J]*AREAs/(0.5*AREAw);
+//				else
+//					SP[i][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_u[I][J] * AREAs;
+//			}
+//			else
+//				SP[i][J] = 0.;
+//			//#################END SELF ADDED CODE#################//    
 
 			Su[i][J] = (mueff[I][J]*dudx[I][J] - mueff[I-1][J]*dudx[I-1][J]) / (x[I] - x[I-1]) + 
 			           (mun        *dvdx[i][j+1] - mus        *dvdx[i][j]) / (y_v[j+1] - y_v[j]) -
@@ -575,9 +604,9 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			
 			//################BEGIN SELF ADDED CODE################//
 			// USE TEXTFILE DATA TO SET VELOCITY!
-			if (CONS[i][J] == 1.) {
-				SP[i][J] = - LARGE;
-			}			
+//			if (CONS[i][J] == 1.) {
+//				SP[i][J] = - LARGE;
+//			}			
 			//#################END SELF ADDED CODE#################//
 			
 			/* The coefficients (hybrid differencing sheme) */
@@ -588,8 +617,10 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			if (J==1) aS[i][J]=0.;
 			else      aS[i][J] = max3( Fs, Ds + 0.5*Fs, 0.);
             
-			if (J==NPJ) aN[i][J] =0.;
-			else        aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
+//			if (J==NPJ) aN[i][J] =0.;
+//			else        aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
+			
+			aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.); // PIM: added
             
 			aPold    = 0.5*(rho[I-1][J] + rho[I][J])*AREAe*AREAn/Dt;
 
@@ -676,27 +707,28 @@ void vcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			muw = 0.25*(mueff[I][J] + mueff[I-1][J] + mueff[I][J-1] + mueff[I-1][J-1]);
 			mue = 0.25*(mueff[I][J] + mueff[I+1][J] + mueff[I][J-1] + mueff[I+1][J-1]);
 		
-			//################BEGIN SELF ADDED CODE################//
-			// Calculate sourceterm in v-direction:
-			if (CONS[I][J] == 3.) {
-				if(yplus_v[I][J] < 11.63)
-					SP[i][J]  = -mu[I][J]*AREAw/(0.5*AREAs);
-				else
-					SP[i][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_v[I][J] * AREAw;
-			}
-			// Calculate sourceterm in v-direction (for corners):	
-			if (CONS[I][J] == 4.) {
-				// Calculate sourceterm in v-direction and add to sourceterm of u-direction:
-				if(yplus_v[I][J] < 11.63)
-					SP[i][J] += -mu[I][J]*AREAw/(0.5*AREAs);
-				else
-					SP[i][J] += -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_v[I][J] * AREAw;
-			}
-			// Set source terms to 0 if no vertical boundaries:
-			else
-				SP[I][j] = 0.;
-			//#################END SELF ADDED CODE#################// 
-				
+//			//################BEGIN SELF ADDED CODE################//
+//			// Calculate sourceterm in v-direction:
+//			if (CONS[I][J] == 3.) {
+//				if(yplus_v[I][J] < 11.63)
+//					SP[i][J]  = -mu[I][J]*AREAw/(0.5*AREAs);
+//				else
+//					SP[i][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_v[I][J] * AREAw;
+//			}
+//			// Calculate sourceterm in v-direction (for corners):	
+//			if (CONS[I][J] == 4.) {
+//				// Calculate sourceterm in v-direction and add to sourceterm of u-direction:
+//				if(yplus_v[I][J] < 11.63)
+//					SP[i][J] += -mu[I][J]*AREAw/(0.5*AREAs);
+//				else
+//					SP[i][J] += -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_v[I][J] * AREAw;
+//			}
+//			// Set source terms to 0 if no vertical boundaries:
+//			else
+//				SP[I][j] = 0.;
+//			//#################END SELF ADDED CODE#################// 
+			
+			SP[I][j] = 0.;	
 			Su[I][j] = (mueff[I][J]*dvdy[I][J] - mueff[I][J-1]*dvdy[I][J-1])/(y[J] - y[J-1]) + 
 			           (mue*dudy[i+1][j] - muw*dudy[i][j])/(x_u[i+1] - x_u[i]) - 
                        2./3. * (rho[I][J]*k[I][J] - rho[I][J-1]*k[I][J-1])/(y[J] - y[J-1]); 
@@ -705,9 +737,9 @@ void vcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			
 			//################BEGIN SELF ADDED CODE################//
 			// USE TEXTFILE DATA TO SET VELOCITY!
-			if (CONS[I][J] == 1.) {
-				SP[I][j] = - LARGE;
-			}
+//			if (CONS[I][J] == 1.) {
+//				SP[I][j] = - LARGE;
+//			}
 			//#################END SELF ADDED CODE#################//
 
 			/* The coefficients (hybrid differencing scheme) */
@@ -819,8 +851,6 @@ void pccoeff(double **aE, double **aW, double **aN, double **aS, double **aP, do
 	      SAVG = SSUM/((Iend - Istart)*(Jend - Jstart));
 
 } /* pccoeff */
-
-
 
 /* ################################################################# */
 void storeresults(void)
@@ -942,12 +972,11 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			aPold    = rho[I][J]*AREAe*AREAn/Dt;
 
 			//################BEGIN SELF ADDED CODE################//
-			// USE TEXTFILE DATA TO SET VELOCITY!
 
-			if (CONS[I][J] == 1.) {
-				SP[I][J] = - LARGE;
-				Su[I][J] = LARGE*TEMP;
-			}
+//			if (CONS[I][J] == 1.) {
+//				SP[I][J] = - LARGE;
+//				Su[I][J] = LARGE*TEMP;
+//			}
 			//#################END SELF ADDED CODE#################//
 
 			/* eq. 8.31 with time dependent terms (see also eq. 5.14): */
@@ -991,6 +1020,7 @@ void epscoeff(double **aE, double **aW, double **aN, double **aS, double **aP, d
 
 	conv();
     viscosity();
+//    properties(); // Including viscosity();
     
 	for (I = Istart; I <= Iend; I++) {
 		i = I;
@@ -1025,7 +1055,7 @@ void epscoeff(double **aE, double **aW, double **aN, double **aS, double **aP, d
 
 		 /* The source terms */
 
-			if (J==1 || J==NPJ) {
+			if (J==1){// || J==NPJ) {
 				SP[I][J] = -LARGE;
 				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*0.5*AREAw)*LARGE;
 			}
@@ -1080,11 +1110,13 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 
 	conv();
     viscosity();
-//    calculateuplus(); // PIM: Only for top and bottem wall!
+//    properties(); // Including viscosity();
+    
+    calculateuplus(); // PIM: Only for top and bottem wall!
     
 	//################BEGIN SELF ADDED CODE################//
 	
-    calc_uplus(); // PIM: With wall functions, for CONS
+//    calc_uplus(); // PIM: With wall functions, for CONS
 
 	//#################END SELF ADDED CODE#################//
   
@@ -1123,40 +1155,45 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 
             /* The source terms */
             // Source terms for horizontal walls:
-//            if (J == 1 || J == NPJ) {
-//				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus[I][J]/(0.5*AREAw) * AREAs * AREAw;
-//				Su[I][J] = tw[I][J] * 0.5 * (u[i][J] + u[i+1][J])/(0.5*AREAw) * AREAs * AREAw;
-//			}
-			
-			//################BEGIN SELF ADDED CODE################//
-			// Calculate sourceterm in u-direction:
-			if (CONS[I][J] == 2.) {
-				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_u[I][J]/(0.5*AREAw) * AREAs * AREAw;
+            if (J == 1){// || J == NPJ) {
+				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus[I][J]/(0.5*AREAw) * AREAs * AREAw;
 				Su[I][J] = tw[I][J] * 0.5 * (u[i][J] + u[i+1][J])/(0.5*AREAw) * AREAs * AREAw;
 			}
-			// Calculate sourceterm in v-direction:
-			if (CONS[I][J] == 3.) {
-				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_v[I][J]/(0.5*AREAs) * AREAs * AREAw;
-				Su[I][J] = tw[I][J] * 0.5 * (v[I][j] + v[I][j+1])/(0.5*AREAs) * AREAs * AREAw;
-			}
-			// Calculate sourceterm in u-direction and v-direction (for circular objects):
-			if (CONS[I][J] == 4.) {
-				// Calculate sourceterm in u-direction:
-				SP[I][J]  = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_u[I][J]/(0.5*AREAw) * AREAs * AREAw;
-				// Calculate sourceterm in v-direction and add to sourceterm:
-				SP[I][J] += -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_v[I][J]/(0.5*AREAs) * AREAs * AREAw;
-				// Calculate sourceterm in u-direction:
-				Su[I][J]  = tw[I][J] * 0.5 * (u[i][J] + u[i+1][J])/(0.5*AREAw) * AREAs * AREAw;
-				// Calculate sourceterm in v-direction and add to sourceterm:
-				Su[I][J] += tw[I][J] * 0.5 * (v[I][j] + v[I][j+1])/(0.5*AREAs) * AREAs * AREAw;
-			}
-			//#################END SELF ADDED CODE#################//                 
-			
 			else {
 				Su[I][J]  = 2. * mut[I][J] * E2[I][J];
 				SP[I][J]  = -rho[I][J] * eps[I][J] / k[I][J];
 			}
-                                     
+			
+			
+			
+//			//################BEGIN SELF ADDED CODE################//
+//			// Calculate sourceterm in u-direction:
+//			if (CONS[I][J] == 2.) {
+//				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_u[I][J]/(0.5*AREAw) * AREAs * AREAw;
+//				Su[I][J] = tw[I][J] * 0.5 * (u[i][J] + u[i+1][J])/(0.5*AREAw) * AREAs * AREAw;
+//			}
+//			// Calculate sourceterm in v-direction:
+//			if (CONS[I][J] == 3.) {
+//				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_v[I][J]/(0.5*AREAs) * AREAs * AREAw;
+//				Su[I][J] = tw[I][J] * 0.5 * (v[I][j] + v[I][j+1])/(0.5*AREAs) * AREAs * AREAw;
+//			}
+//			// Calculate sourceterm in u-direction and v-direction (for circular objects):
+//			if (CONS[I][J] == 4.) {
+//				// Calculate sourceterm in u-direction:
+//				SP[I][J]  = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_u[I][J]/(0.5*AREAw) * AREAs * AREAw;
+//				// Calculate sourceterm in v-direction and add to sourceterm:
+//				SP[I][J] += -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_v[I][J]/(0.5*AREAs) * AREAs * AREAw;
+//				// Calculate sourceterm in u-direction:
+//				Su[I][J]  = tw[I][J] * 0.5 * (u[i][J] + u[i+1][J])/(0.5*AREAw) * AREAs * AREAw;
+//				// Calculate sourceterm in v-direction and add to sourceterm:
+//				Su[I][J] += tw[I][J] * 0.5 * (v[I][j] + v[I][j+1])/(0.5*AREAs) * AREAs * AREAw;
+//			}
+//			else {
+//				Su[I][J]  = 2. * mut[I][J] * E2[I][J];
+//				SP[I][J]  = -rho[I][J] * eps[I][J] / k[I][J];
+//			}
+//			//#################END SELF ADDED CODE#################//                 
+			                     
 			Su[I][j] *= AREAw*AREAs;
 			SP[I][j] *= AREAw*AREAs;
 
@@ -1168,8 +1205,10 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
             if (J == 1) aS[i][J] = 0;
 			else        aS[i][J] = max3( Fs, Ds + 0.5*Fs, 0.);
             
-			if (J == NPJ) aN[i][J] = 0;
-			else          aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
+//			if (J == NPJ) aN[i][J] = 0;
+//			else          aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
+			
+			aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
             
             aPold    = rho[I][J]*AREAe*AREAn/Dt;
 
@@ -1198,6 +1237,8 @@ void calculateuplus(void)
 	int    i,j,I, J;
 
 	viscosity();
+//	properties(); // Including viscosity();
+
 
 	for (I = 0; I <= NPI; I++){
 	    i=I;
@@ -1242,7 +1283,8 @@ void calc_uplus(void)
 	int    i,j,I, J;
 	double Dx, Dy;
 	
-	viscosity();
+//	viscosity();
+	properties(); // Including viscosity();
 	
 	// PIM: Make Dx and Dy global!
 	Dx = XMAX/NPI;
@@ -1352,6 +1394,34 @@ void viscosity(void)
       } /* for */
 
 } /* viscosity */
+
+//################BEGIN SELF ADDED CODE################//
+
+/* ################################################################# */
+void properties(void)
+/* ################################################################# */
+{
+/***** Purpose: Calculate the properties in the fluid as a function of temperature *****/
+	int   I, J;
+
+	for (I = 0; I <= NPI; I++)
+		for (J = 1; J <= NPJ + 1; J++) {
+			
+//			p_abs  [I][J] = P_ATM + p[I][J]; /* Absolute pressure [Pa]*/
+//			rho    [I][J] = 28.964*p_abs[I][J]/T[I][J]/GAS_CONS;      /* Density */
+//			mu     [I][J] = 352.975/T[I][J]*0.000001*(0.0264*pow(((T[I][J]-273.15)+50),1.24)+10);    /* Viscosity */
+//			Cp     [I][J] = 1031.311-0.2028999*T[I][J]+0.0004005271*T[I][J]*T[I][J];     /* J/(K*kg) Heat capacity - assumed constant for this problem */
+//			lambda [I][J] = 0.005+T[I][J]/13944;     /* W/(K*m) Thermal conductivity */
+//			Gamma  [I][J] = lambda[I][J]/Cp[I][J]; /* Thermal conductivity divided by heat capacity */
+
+			// Calculate the viscosity in the fluid as a function of temperature (PIM: From original code)
+            mut[I][J] = rho[I][J]*Cmu*sqr(k[I][J])/(eps[I][J]+SMALL);
+			mueff[I][J] = mu[I][J] + mut[I][J];
+      } /* for */
+
+} /* properties */
+
+//#################END SELF ADDED CODE#################// 
 
 /* ################################################################# */
 void printConv(double time, int iter)
@@ -1572,6 +1642,8 @@ void memalloc(void)
 	yplus_v = double_2D_matrix(NPI + 2, NPJ + 2);
 	uplus_u = double_2D_matrix(NPI + 2, NPJ + 2);
 	uplus_v = double_2D_matrix(NPI + 2, NPJ + 2);
+	lambda  = double_2D_matrix(NPI + 2, NPJ + 2);
+	p_abs   = double_2D_matrix(NPI + 2, NPJ + 2);
 	//#################END SELF ADDED CODE#################//
 
 } /* memalloc */
@@ -1670,4 +1742,42 @@ void readInput (char *name)
 
 } /* readinput */
 
-//#################END SELF ADDED CODE#################//
+///* ################################################################# */
+//void animation(double time)
+///* ################################################################# */
+//{
+///***** Purpose: Creating result table ******/
+//	int    I, J, i, j;
+//	double ugrid, vgrid;
+//	FILE   *fp2;
+//	char fileName[] = "0.dat";
+//
+///* Plot all results in output.dat */
+//	
+/////////
+//
+//   fileName[0]=time;
+//   fp=fopen(fileName,"r"); //what will go here??
+//   //...
+/////////
+//
+//	fp2 = fopen(fileName, "w");
+//
+//	for (I = 0; I <= NPI; I++) {
+//		i = I;
+//		for (J = 1; J <= NPJ; J++) {
+//			j = J;
+//			ugrid = 0.5*(u[i][J]+u[i+1][J  ]);
+//			vgrid = 0.5*(v[I][j]+v[I  ][j+1]);
+//
+//			fprintf(fp2, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
+//			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], uplus[I][J], yplus[I][J], yplus_u[I][J], yplus_v[I][J], uplus_u[I][J], uplus_v[I][J]);
+////			             1     2     3      4      5        6        7          8         9            10       11         12           13           14            15              16             17
+//		} /* for J */
+//		fprintf(fp2, "\n");
+//	} /* for I */
+//
+//	fclose(fp2);
+//
+//} /* animation */
+////#################END SELF ADDED CODE#################//

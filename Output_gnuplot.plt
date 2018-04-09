@@ -44,12 +44,12 @@ scale = 0.15
 #show bind
 
 ### Start multiplot 
-set multiplot layout 2,2 rowsfirst
+set multiplot layout 1,1 rowsfirst
 
 #set label 1 'ugrid' at graph 0.0,0.0,0.0 font ',16'
 
 
-#splot 'output.dat' using 1:2:3 with pm3d # --- GRAPH: ugrid
+splot 'output.dat' using 1:2:3 with pm3d # --- GRAPH: ugrid
 
 #splot 'output.dat' using 1:2:4 with pm3d # --- GRAPH: vgrid
 
@@ -79,13 +79,13 @@ set multiplot layout 2,2 rowsfirst
 
 #splot 'output.dat' using 1:2:17 with pm3d # --- GRAPH: -      / uplus_v
 
-splot 'vort.dat' using 1:2:3 with pm3d # --- GRAPH: x[I], y[J], vorticity
+#splot 'vort.dat' using 1:2:3 with pm3d # --- GRAPH: x[I], y[J], vorticity
 
-splot 'str.dat' using 1:2:3 with pm3d # --- GRAPH: x[I], y[J], stream
+#splot 'str.dat' using 1:2:3 with pm3d # --- GRAPH: x[I], y[J], stream
 
-splot 'velu.dat' using 1:2:3 with pm3d # --- GRAPH: x_u[i], y[J], u[i][J]
+#splot 'velu.dat' using 1:2:3 with pm3d # --- GRAPH: x_u[i], y[J], u[i][J]
 
-splot 'velv.dat' using 1:2:3 with pm3d # --- GRAPH: x[I], y_v[j], v[I][j]
+#splot 'velv.dat' using 1:2:3 with pm3d # --- GRAPH: x[I], y_v[j], v[I][j]
 
 unset multiplot
 ### End multiplot
