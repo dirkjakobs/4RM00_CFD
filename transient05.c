@@ -278,20 +278,27 @@ void bound(void)
 	
 	//################BEGIN SELF ADDED CODE################//
 		
-	  /* Upper boundary */
+	/* Set Wall Boundary values if applicable
+	   Boundary conditions need to be set if there is NO wall*/
 	for (I = 1; I <= NPI + 1; I++) {
 		i = I;
-		/* Correction factor m_in/m_out is used to satisfy global continuity########################## might need an eddit ###########################################*/
-		u[i][NPJ+1] = u[i][NPJ];
-		v[I][NPJ+1] = v[I][NPJ];
-		k[I][NPJ+1] = k[I][NPJ];
-		eps[I][NPJ+1] = eps[I][NPJ];
-	} /* for J */
-	
-	/* Upper boundary temperature gradient is set to 0 */
-	for (I = 0; I <= NPI + 1; I++) {
-		T[I][NPJ+1] = T[I][NPJ]; /* upper boundary */
-	} /* for J */
+		// Lower wall gradient boundary conditions
+		if (CONS[I][0][0] != true) {
+			u[i][0] = u[i][1];
+			v[I][0] = v[I][1];
+			k[I][0] = k[I][1];
+			eps[I][0] = eps[I][1];
+			T[I][0] = T[I][1];
+		}
+		// Upper wall gradient boundary conditions
+		if (CONS[I][NPJ+1][0] != true) {
+			u[i][NPJ+1] = u[i][NPJ];
+			v[I][NPJ+1] = v[I][NPJ];
+			k[I][NPJ+1] = k[I][NPJ];
+			eps[I][NPJ+1] = eps[I][NPJ];
+			T[I][NPJ+1] = T[I][NPJ];
+		}
+	} /* for I */
 	
 	//#################END SELF ADDED CODE#################//
 
