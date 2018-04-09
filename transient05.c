@@ -177,8 +177,8 @@ void init(void)
 			k      [I][J] = 1e-3;     /* k */
 			eps    [I][J] = 1e-4;     /* epsilon */
 			uplus  [I][J] = 1.;                                            /* uplus */
-			yplus1 [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (y[1] - y[0]);   /* yplus1 */
-			yplus2 [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (y[NPJ+1] - y[NPJ]);   /* yplus2 */
+//			yplus1 [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (y[1] - y[0]);   /* yplus1 */
+//			yplus2 [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (y[NPJ+1] - y[NPJ]);   /* yplus2 */
 			yplus  [I][J] = 1.;                                            /* yplus*/
 			tw     [I][J] = 5.;                                                /* tw */
 			rho    [I][J] = 1.0;      /* Density */
@@ -1080,8 +1080,15 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 
 	conv();
     viscosity();
-    calculateuplus();
-//    calc_uplus();
+//    calculateuplus(); // PIM: Only for top and bottem wall!
+    
+	//################BEGIN SELF ADDED CODE################//
+	
+    calc_uplus(); // PIM: With wall functions, for CONS
+
+	//#################END SELF ADDED CODE#################//
+  
+
     
 	for (I = Istart; I <= Iend; I++) {
 		i = I;
@@ -1257,11 +1264,17 @@ void calc_uplus(void)
                 	tw[I][J]       = mu[I][J] * 0.5 * (u[i][J]+u[i+1][J]) / (0.5*Dy); // PIM: in general holds: 0.5*Dy = y[1] -y[0]
                   	yplus_u[I][J]  = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dy) / mu[I][J];
                   	uplus_u[I][J]  = yplus_u[I][J];
+                  	
+                  	yplus[I][J]    = yplus_u[I][J]; //PIM: test, wordt niet gebruikt in programma
+					uplus[I][J]    = yplus[I][J];   //PIM: test, wordt niet gebruikt in programma
             	}/* if */
             	else {
                   	tw[I][J]       = rho[I][J] * pow(Cmu,0.25) * sqrt(k[I][J]) * 0.5 * (u[i][J]+u[i+1][J]) / uplus_u[I][J];
                   	yplus_u [I][J] = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dy) / mu[I][J];
                   	uplus_u [I][J] = log(ERough*yplus_u[I][J])/kappa;
+                  	
+                  	yplus[I][J]    = yplus_u [I][J]; //PIM: test, wordt niet gebruikt in programma
+					uplus[I][J]    = log(ERough*yplus[I][J])/kappa; //PIM: test, wordt niet gebruikt in programma
             	}/* else */
 	        } /* if */
 	        
@@ -1272,11 +1285,18 @@ void calc_uplus(void)
                 	tw[I][J]       = mu[I][J] * 0.5 * (v[I][j]+v[I][j+1]) / (0.5*Dx); // PIM: in general holds: 0.5*Dy = y[1] -y[0]
                   	yplus_v[I][J]  = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dx) / mu[I][J];
                   	uplus_v[I][J]  = yplus_v[I][J];
+                  	
+                  	yplus[I][J]    = yplus_v[I][J]; //PIM: test, wordt niet gebruikt in programma
+					uplus[I][J]    = yplus[I][J];   //PIM: test, wordt niet gebruikt in programma                	
             	}/* if */
             	else {
                   	tw[I][J]       = rho[I][J] * pow(Cmu,0.25) * sqrt(k[I][J]) * 0.5 * (v[I][j]+v[I][j+1]) / uplus_v[I][J];
                   	yplus_v [I][J] = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dx) / mu[I][J];
                   	uplus_v [I][J] = log(ERough*yplus_v[I][J])/kappa;
+                  	
+                  	yplus[I][J]    = yplus_v [I][J]; //PIM: test, wordt niet gebruikt in programma
+					uplus[I][J]    = log(ERough*yplus[I][J])/kappa; //PIM: test, wordt niet gebruikt in programma
+                  	
             	}/* else */
 	        } /* if */
 	        
@@ -1293,6 +1313,9 @@ void calc_uplus(void)
                   	tw[I][J]       = mu[I][J] * 0.5 * (v[I][j]+v[I][j+1]) / (0.5*Dx); // PIM: in general holds: 0.5*Dy = y[1] -y[0]
                   	yplus_v[I][J]  = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dx) / mu[I][J];
                   	uplus_v[I][J]  = yplus_v[I][J];
+                  	
+                  	yplus[I][J]    = yplus_u[I][J] + yplus_v[I][J]; //PIM: test, wordt niet gebruikt in programma
+					uplus[I][J]    = yplus[I][J];   //PIM: test, wordt niet gebruikt in programma  
             	}/* if */
             	else {
             		// Calculate yplus_u:
@@ -1303,7 +1326,10 @@ void calc_uplus(void)
                   	// Calculate yplus_v:
                   	tw[I][J]       = rho[I][J] * pow(Cmu,0.25) * sqrt(k[I][J]) * 0.5 * (v[I][j]+v[I][j+1]) / uplus_v[I][J];
                   	yplus_v [I][J] = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dx) / mu[I][J];
-                  	uplus_v [I][J] = log(ERough*yplus_v[I][J])/kappa;	
+                  	uplus_v [I][J] = log(ERough*yplus_v[I][J])/kappa;
+					
+					yplus[I][J]    = yplus_u[I][J] + yplus_v[I][J]; //PIM: test, wordt niet gebruikt in programma
+					uplus[I][J]    = log(ERough*yplus[I][J])/kappa; //PIM: test, wordt niet gebruikt in programma	
             	}/* else */
 			} /* if */  
         } /* for */
@@ -1359,9 +1385,15 @@ void output(void)
 			j = J;
 			ugrid = 0.5*(u[i][J]+u[i+1][J  ]);
 			vgrid = 0.5*(v[I][j]+v[I  ][j+1]);
-			fprintf(fp, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
-			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], uplus[I][J], yplus[I][J], yplus1[I][J], yplus2[I][J]);
-//			             1     2     3      4      5        6        7          8         9            10       11         12           13           14            15
+//			fprintf(fp, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
+//			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], uplus[I][J], yplus[I][J], yplus1[I][J], yplus2[I][J]);
+////			             1     2     3      4      5        6        7          8         9            10       11         12           13           14            15
+
+			//################BEGIN SELF ADDED CODE################//
+			fprintf(fp, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
+			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], uplus[I][J], yplus[I][J], yplus_u[I][J], yplus_v[I][J], uplus_u[I][J], uplus_v[I][J]);
+//			             1     2     3      4      5        6        7          8         9            10       11         12           13           14            15              16             17
+			//#################END SELF ADDED CODE#################//  
 		} /* for J */
 		fprintf(fp, "\n");
 	} /* for I */
