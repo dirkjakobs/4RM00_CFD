@@ -80,11 +80,7 @@ int main(int argc, char *argv[])
 		/* reset SMAX and SAVG */
 		SMAX = LARGE;
 		SAVG = LARGE;
-
-		//################BEGIN SELF ADDED CODE################//	
-//		animation(time);
-		//#################END SELF ADDED CODE#################//
-
+		
 	} /* for Dt */
 	output();
 
@@ -180,26 +176,27 @@ void init(void)
 //			u      [i][J] = U_IN*1.5*(1.-sqr(2.*(y[J]-YMAX/2.)/YMAX));     /* Guess velocity profile in x-direction */
 
 			u      [i][J] = U_IN;
-			v      [I][j] = 0.;       /* Velocity in y-direction */
-			p      [I][J] = 0.;       /* Relative pressure */
-			T      [I][J] = 273.;     /* Temperature */
-			k      [I][J] = 1e-3;     /* k */
-			eps    [I][J] = 1e-4;     /* epsilon */
-			uplus  [I][J] = 1.;                                            /* uplus */
+			v      [I][j] = 0.;       					/* Velocity in y-direction */
+			p      [I][J] = 0.;       					/* Relative pressure */
+			T      [I][J] = 273.;     					/* Temperature */
+			k      [I][J] = 1e-3;     					/* k */
+			eps    [I][J] = 1e-4;     					/* epsilon */
+			uplus  [I][J] = 1.;                         /* uplus */
 			yplus1 [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (y[1] - y[0]);   /* yplus1 */
 			yplus2 [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (y[NPJ+1] - y[NPJ]);   /* yplus2 */
-			yplus  [I][J] = 1.;                                            /* yplus*/
-			tw     [I][J] = 5.;                                                /* tw */
-			rho    [I][J] = rho_init;      /* Density */
-			mu     [I][J] = mu_init;    /* Viscosity */
-			Cp     [I][J] = Cp_init;     /* J/(K*kg) Heat capacity - assumed constant for this problem */
-			Gamma  [I][J] = K_init/Cp[I][J]; /* Thermal conductivity divided by heat capacity */
-			u_old  [i][J] = u[i][J];  /* Velocity in x-direction old timestep */
-			v_old  [I][j] = v[I][j];  /* Velocity in y-direction old timestep */
-			pc_old [I][J] = pc[I][J]; /* Pressure correction old timestep */
-			T_old  [I][J] = T[I][J];  /* Temperature old timestep */
-			eps_old[I][J] = eps[I][J];  /* epsilon old timestep*/
-			k_old  [I][J] = k[I][J];    /* k old timestep*/
+			yplus  [I][J] = 1.;                         /* yplus*/
+			tw     [I][J] = 5.;                         /* tw */
+			rho    [I][J] = rho_init;      				/* Density */
+			mu     [I][J] = mu_init;    				/* Viscosity */
+			Cp     [I][J] = Cp_init;     				/* J/(K*kg) Heat capacity - assumed constant for this problem */
+			Gamma  [I][J] = K_init/Cp[I][J]; 			/* Thermal conductivity divided by heat capacity */
+			Prandtl[I][J] = mu[I][J]/Gamma[I][J]; 		/* laminar Prandtl number mu*Cp/K (eq. 3.50) */
+			u_old  [i][J] = u[i][J];  					/* Velocity in x-direction old timestep */
+			v_old  [I][j] = v[I][j];  					/* Velocity in y-direction old timestep */
+			pc_old [I][J] = pc[I][J]; 					/* Pressure correction old timestep */
+			T_old  [I][J] = T[I][J];  					/* Temperature old timestep */
+			eps_old[I][J] = eps[I][J];  				/* epsilon old timestep*/
+			k_old  [I][J] = k[I][J];    				/* k old timestep*/
 			
 			//################BEGIN SELF ADDED CODE################//
 			// Set yplus and uplus to 1 (Can be optimised, put yplus in elsif below etc.)
@@ -567,15 +564,15 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			mun = 0.25*(mueff[I][J] + mueff[I-1][J] + mueff[I][J+1] + mueff[I-1][J+1]);
 			
 			// Calculate sourceterms for horizontal walls:
-			if(J == 1){// || J==NPJ) {
-
-				if(yplus[I][J] < 11.63)
-					SP[i][J]= -mu[I][J]*AREAs/(0.5*AREAw);
-				else
-					SP[i][J]=-rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus[I][J] * AREAs;
-			}
-			else
-				SP[i][J] = 0.;	
+			//if(J == 1){// || J==NPJ) {
+//
+//				if(yplus[I][J] < 11.63)
+//					SP[i][J]= -mu[I][J]*AREAs/(0.5*AREAw);
+//				else
+//					SP[i][J]=-rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus[I][J] * AREAs;
+//			}
+//			else
+//				SP[i][J] = 0.;	
 				
 			//################BEGIN SELF ADDED CODE################//
 			// Calculate sourceterm in u-direction:
@@ -946,26 +943,59 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			Ds = Gamma[I  ][J-1]*Gamma[I  ][J  ]/(Gamma[I  ][J-1]*(y[J  ] - y_v[j  ]) + Gamma[I  ][J  ]*(y_v[j  ] - y[J-1]))*AREAs;
 			Dn = Gamma[I  ][J  ]*Gamma[I  ][J+1]/(Gamma[I  ][J  ]*(y[J+1] - y_v[j+1]) + Gamma[I  ][J+1]*(y_v[j+1] - y[J  ]))*AREAn;
 
-			/* The source terms, page 278 */
-
-			SP[I][J] = 0.;	// PIM: for adiabatic walls
-			Su[I][J] = 0.;  // PIM: for adiabatic walls
-
-			/* The coefficients (hybrid differencing scheme) */
-
-			aW[I][J] = max3( Fw, Dw + 0.5*Fw, 0.);
-			aE[I][J] = max3(-Fe, De - 0.5*Fe, 0.);
-			aS[I][J] = max3( Fs, Ds + 0.5*Fs, 0.);
-			aN[I][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
-			aPold    = rho[I][J]*AREAe*AREAn/Dt;
-
 			//################BEGIN SELF ADDED CODE################//
-
-			if (CONS[I][J][0] == true) {
+			/* The source terms, page 278 */
+			// Calculate sourceterm in u-direction:
+			if (CONS[I][J][0] == true) {	/* On a wall, fix temperature */
 				SP[I][J] = - LARGE;
 				Su[I][J] = LARGE*TEMP;
 			}
+			else if (CONS[I][J][1]*CONS[I][J][3] == true) {
+				if(yplus_u[I][J] < 11.63) 	/* laminar flow, eq. 9.13 */
+					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAs/(0.5*AREAw);
+				else 						/* Turbulent flow, eq. 9.24 */
+					SP[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) * Cp[I][J] / Tplus_u[I][J] * AREAs;
+				/* Source term Su */
+				Su[I][J] = -SP[I][J]*TEMP;
+			}
+			// Calculate sourceterm in v-direction:
+			else if (CONS[I][J][2]*CONS[I][J][3] == true) {
+				if(yplus_u[I][J] < 11.63) 	/* laminar flow, eq. 9.13 */
+					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAw/(0.5*AREAs);
+				else 						/* Turbulent flow, eq. 9.24 */
+					SP[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) *Cp[I][J] / Tplus_v[I][J] * AREAw;
+				/* Source term Su */
+				Su[I][J] = -SP[I][J]*TEMP;
+			}	
+			else {	/* for adiabatic walls, or places without wall*/
+				SP[i][J] = 0.;
+				Su[I][J] = 0.;
+			}
+			
+			/* The coefficients (hybrid differencing scheme) */
+			
+			/* aS, check current position and for wall to the south (J-1) */
+			if (CONS[I][J][1]*CONS[I][J-1][0]*CONS[I][J][3] == true) aS[I][J] = 0.;
+			else      aS[I][J] = max3( Fs, Ds + 0.5*Fs, 0.);
+            
+			/* aN, check current position and for wall to the north (J+1) */
+			if (CONS[I][J][1]*CONS[I][J+1][0]*CONS[I][J][3] == true) aN[I][J] = 0.;
+			else      aN[I][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
+			
+			/* aW, check current position and for wall to the west (I-1) */
+			if (CONS[I][J][1]*CONS[I-1][J][0]*CONS[I][J][3] == true) aW[I][J] = 0.;
+			else      aW[I][J] = max3( Fw, Dw + 0.5*Fw, 0.);
+			
+			/* aE, check current position and for wall to the east (I+1) */
+			if (CONS[I][J][1]*CONS[I+1][J][0]*CONS[I][J][3] == true) aE[I][J] = 0.;
+			else      aE[I][J] = max3(-Fe, De - 0.5*Fe, 0.);
 			//#################END SELF ADDED CODE#################//
+
+//			aW[I][J] = max3( Fw, Dw + 0.5*Fw, 0.);
+//			aE[I][J] = max3(-Fe, De - 0.5*Fe, 0.);
+//			aS[I][J] = max3( Fs, Ds + 0.5*Fs, 0.);
+//			aN[I][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
+			aPold    = rho[I][J]*AREAe*AREAn/Dt;
 
 			/* eq. 8.31 with time dependent terms (see also eq. 5.14): */
 
@@ -1156,20 +1186,9 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			Ds = mut[I  ][J-1]*mut[I  ][J  ]/sigmak/(mut[I  ][J-1]*(y[J  ] - y_v[j  ]) + mut[I  ][J  ]*(y_v[j  ] - y[J-1]))*AREAs;
 			Dn = mut[I  ][J  ]*mut[I  ][J+1]/sigmak/(mut[I  ][J  ]*(y[J+1] - y_v[j+1]) + mut[I  ][J+1]*(y_v[j+1] - y[J  ]))*AREAn;
 
-            /* The source terms */
-            // Source terms for horizontal walls:
-			
-//            if (J == 1 || J == NPJ) {
-//				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus[I][J]/(0.5*AREAw) * AREAs * AREAw;
-//				Su[I][J] = tw[I][J] * 0.5 * (u[i][J] + u[i+1][J])/(0.5*AREAw) * AREAs * AREAw;
-//			}
-//			else {
-//				Su[I][J]  = 2. * mut[I][J] * E2[I][J];
-//				SP[I][J]  = -rho[I][J] * eps[I][J] / k[I][J];
-//			}
-
 			//################BEGIN SELF ADDED CODE################//
-
+			
+			/* The source terms */
 			// Calculate sourceterm in u-direction:
 			if (CONS[I][J][1] == true) {
 				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_u[I][J]/(0.5*AREAw) * AREAs * AREAw;
@@ -1201,14 +1220,8 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
             
 			/* aN, check current position and for wall to the north (J+1) */
 			if (CONS[I][J][1] == true && CONS[I][J+1][0] == true) aN[i][J] =0.;
-			else        aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
+			else      aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
 			//#################END SELF ADDED CODE#################//
-						
-//          if (J == 1) aS[i][J] = 0;
-//			else        aS[i][J] = max3( Fs, Ds + 0.5*Fs, 0.);
-            
-//			if (J == NPJ) aN[i][J] = 0;
-//			else          aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
             
             aPold    = rho[I][J]*AREAe*AREAn/Dt;
 
@@ -1303,16 +1316,17 @@ void calc_uplus(void)
                   	yplus_u[I][J]  = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dy) / mu[I][J];
                   	uplus_u[I][J]  = yplus_u[I][J];
                   	
-                  	yplus[I][J]    = yplus_u[I][J]; //PIM: test, wordt niet gebruikt in programma
-					uplus[I][J]    = yplus[I][J];   //PIM: test, wordt niet gebruikt in programma
+//                 	yplus[I][J]    = yplus_u[I][J]; //PIM: test, wordt niet gebruikt in programma
+//					uplus[I][J]    = yplus[I][J];   //PIM: test, wordt niet gebruikt in programma
             	}/* if */
             	else {
                   	tw[I][J]       = rho[I][J] * pow(Cmu,0.25) * sqrt(k[I][J]) * 0.5 * (u[i][J]+u[i+1][J]) / uplus_u[I][J];
                   	yplus_u [I][J] = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dy) / mu[I][J];
                   	uplus_u [I][J] = log(ERough*yplus_u[I][J])/kappa;
+					Tplus_u [I][J] = turb_Prandtl*(uplus_u[I][J] + Pee(turb_Prandtl, Prandtl[I][J])); /* Turbulet T+, eq. 3.50 */
                   	
-                  	yplus[I][J]    = yplus_u [I][J]; //PIM: test, wordt niet gebruikt in programma
-					uplus[I][J]    = log(ERough*yplus[I][J])/kappa; //PIM: test, wordt niet gebruikt in programma
+//                 	yplus[I][J]    = yplus_u [I][J]; //PIM: test, wordt niet gebruikt in programma
+//					uplus[I][J]    = log(ERough*yplus[I][J])/kappa; //PIM: test, wordt niet gebruikt in programma
             	}/* else */
 	        } /* if */
 	        
@@ -1324,19 +1338,26 @@ void calc_uplus(void)
                   	yplus_v[I][J]  = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dx) / mu[I][J];
                   	uplus_v[I][J]  = yplus_v[I][J];
                   	
-                  	yplus[I][J]    = yplus_v[I][J]; //PIM: test, wordt niet gebruikt in programma
-					uplus[I][J]    = yplus[I][J];   //PIM: test, wordt niet gebruikt in programma                	
+//                 	yplus[I][J]    = yplus_v[I][J]; //PIM: test, wordt niet gebruikt in programma
+//					uplus[I][J]    = yplus[I][J];   //PIM: test, wordt niet gebruikt in programma                	
             	}/* if */
             	else {
                   	tw[I][J]       = rho[I][J] * pow(Cmu,0.25) * sqrt(k[I][J]) * 0.5 * (v[I][j]+v[I][j+1]) / uplus_v[I][J];
                   	yplus_v [I][J] = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dx) / mu[I][J];
                   	uplus_v [I][J] = log(ERough*yplus_v[I][J])/kappa;
+					Tplus_v [I][J] = turb_Prandtl*(uplus_v[I][J] + Pee(turb_Prandtl, Prandtl[I][J])); /* Turbulet T+, eq. 3.50 */
                   	
-                  	yplus[I][J]    = yplus_v [I][J]; //PIM: test, wordt niet gebruikt in programma
-					uplus[I][J]    = log(ERough*yplus[I][J])/kappa; //PIM: test, wordt niet gebruikt in programma
-                  	
+//                 	yplus[I][J]    = yplus_v [I][J]; //PIM: test, wordt niet gebruikt in programma
+//					uplus[I][J]    = log(ERough*yplus[I][J])/kappa; //PIM: test, wordt niet gebruikt in programma
             	}/* else */
-	        } /* if */ 
+	        } /* if */
+			
+			// Calculate: if both are true (for k)
+			if (CONS[I][J][1] == true && CONS[I][J][2] == true) {
+			// ######################### CODE HERE #########################
+			// use mag(x, y) to calculate magnitude of of vector
+			} /* if */
+
         } /* for */
 	} /* for */
 } /* cuplus */
@@ -1624,21 +1645,27 @@ void memalloc(void)
 	yplus_v = double_2D_matrix(NPI + 2, NPJ + 2);
 	uplus_u = double_2D_matrix(NPI + 2, NPJ + 2);
 	uplus_v = double_2D_matrix(NPI + 2, NPJ + 2);
+	Tplus_u = double_2D_matrix(NPI + 2, NPJ + 2); 
+	Tplus_v = double_2D_matrix(NPI + 2, NPJ + 2);
+	
+	Prandtl = double_2D_matrix(NPI + 2, NPJ + 2);  
+	/* for Properties: */
 	lambda  = double_2D_matrix(NPI + 2, NPJ + 2);
 	p_abs   = double_2D_matrix(NPI + 2, NPJ + 2);
 	//#################END SELF ADDED CODE#################//
 
 } /* memalloc */
 
-//################BEGIN SELF ADDED CODE################//
+/* ################################################################# */
 void readInput (char *name)
+/* ################################################################# */
 {
 
 	FILE        *fp;
 	int			ncons, icons;
 	int			nyplus_u, iyplus_u;
 	int			nyplus_v, iyplus_v;
-	int 		I, J;
+	int 		I, J, ad;
 	
 	// open file to read from
 	fp=fopen(name,"r");
@@ -1657,6 +1684,7 @@ void readInput (char *name)
 	fscanf( fp, "%*s %d", &T_ITER );
 	fscanf( fp, "%*s %d", &EPS_ITER );
 	fscanf( fp, "%*s %d", &K_ITER );
+	fscanf( fp, "%*s %lf", &TZERO );
 	fscanf( fp, "%*s %lf", &TEMP );
 	fscanf( fp, "%*s %lf", &U_IN );
 	fscanf( fp, "%*s %lf", &rho_init );
@@ -1675,7 +1703,7 @@ void readInput (char *name)
 	printf("                  Cp =  %4.0f [J/kg/K]       K = %5.3f [W/m/K]\n",Cp_init, K_init);  
 
 	// Allocate memory to save constraints
-	CONS  = bool_3D_matrix(NPI + 2, NPJ + 2, 3);
+	CONS  = bool_3D_matrix(NPI + 2, NPJ + 2, 4);
 	
 	// ###########################################
 	// Get fully constrained points from text file
@@ -1683,8 +1711,11 @@ void readInput (char *name)
 
 	// loop through items in file	
 	for (icons = 0; icons < ncons; icons++) {
-		fscanf( fp, " %d  %d", &I, &J);
+		fscanf( fp, " %d  %d  %d", &I, &J, &ad);
+		/* position constrain in 0 */
 		CONS[I][J][0] = true;
+		/* temperature constrain in 3 */
+		CONS[I][J][3] = ad;
 	}
 
 	// Print results
@@ -1696,8 +1727,11 @@ void readInput (char *name)
 
 	// loop through items in file	
 	for (iyplus_u = 0; iyplus_u < nyplus_u; iyplus_u++) {
-		fscanf( fp, " %d  %d", &I, &J);
+		fscanf( fp, " %d  %d  %d", &I, &J, &ad);
+		/* yplus_u constrain in 1 */
 		CONS[I][J][1] = true;
+		/* temperature constrain in 3 */
+		CONS[I][J][3] = ad;
 	}
 
 	// Print results
@@ -1709,8 +1743,11 @@ void readInput (char *name)
 
 	// loop through items in file	
 	for (iyplus_v = 0; iyplus_v < nyplus_v; iyplus_v++) {
-		fscanf( fp, " %d  %d", &I, &J);
+		fscanf( fp, " %d  %d  %d", &I, &J, &ad);
+		/* yplus_u constrain in 2 */
 		CONS[I][J][2] == true;
+		/* temperature constrain in 3 */
+		CONS[I][J][3] = ad;
 	}
 
 	// Print results
@@ -1719,42 +1756,3 @@ void readInput (char *name)
 
 } /* readinput */
 
-///* ################################################################# */
-//void animation(double time)
-///* ################################################################# */
-//{
-///***** Purpose: Creating result table ******/
-//	int    I, J, i, j;
-//	double ugrid, vgrid;
-//	FILE   *fp2;
-//	char fileName[] = "0.dat";
-//
-///* Plot all results in output.dat */
-//	
-/////////
-//
-//   fileName[0]=time;
-//   fp=fopen(fileName,"r"); //what will go here??
-//   //...
-/////////
-//
-//	fp2 = fopen(fileName, "w");
-//
-//	for (I = 0; I <= NPI; I++) {
-//		i = I;
-//		for (J = 1; J <= NPJ; J++) {
-//			j = J;
-//			ugrid = 0.5*(u[i][J]+u[i+1][J  ]);
-//			vgrid = 0.5*(v[I][j]+v[I  ][j+1]);
-//
-//			fprintf(fp2, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
-//			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], uplus[I][J], yplus[I][J], yplus_u[I][J], yplus_v[I][J], uplus_u[I][J], uplus_v[I][J]);
-////			             1     2     3      4      5        6        7          8         9            10       11         12           13           14            15              16             17
-//		} /* for J */
-//		fprintf(fp2, "\n");
-//	} /* for I */
-//
-//	fclose(fp2);
-//
-//} /* animation */
-////#################END SELF ADDED CODE#################//

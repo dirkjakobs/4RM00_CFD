@@ -25,3 +25,4 @@
 
 //#define TEMP     320.      /* temeperature of constrained parts! */ ### FROM TEXT FILE ###
 #define GAS_CONS   8314.4    /* Gas constant R */
+#define turb_Prandtl 0.9
