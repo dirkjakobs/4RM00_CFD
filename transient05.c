@@ -715,10 +715,10 @@ void vcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			
 			//################BEGIN SELF ADDED CODE################//
 			// USE TEXTFILE DATA TO SET VELOCITY!
-
-			if (CONS[I][J][0] == true) {
-				SP[I][j] = - LARGE;
-			}
+//
+//			if (CONS[I][J][0] == true) {
+//				SP[I][j] = - LARGE;
+//			}
 			//#################END SELF ADDED CODE#################//
 
 			/* The coefficients (hybrid differencing scheme) */
@@ -952,10 +952,10 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 
 			//################BEGIN SELF ADDED CODE################//
 
-			if (CONS[I][J][0] == true) {
-				SP[I][J] = - LARGE;
-				Su[I][J] = LARGE*TEMP;
-			}
+//			if (CONS[I][J][0] == true) {
+//				SP[I][J] = - LARGE;
+//				Su[I][J] = LARGE*TEMP;
+//			}
 			//#################END SELF ADDED CODE#################//
 
 			/* eq. 8.31 with time dependent terms (see also eq. 5.14): */
