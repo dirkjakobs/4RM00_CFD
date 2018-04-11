@@ -1189,20 +1189,36 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			//################BEGIN SELF ADDED CODE################//
 			
 			/* The source terms */
-			// Calculate sourceterm in u-direction:
-			if (CONS[I][J][1] == true) {
-				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_u[I][J]/(0.5*AREAw) * AREAs * AREAw;
-				Su[I][J] = tw[I][J] * 0.5 * (u[i][J] + u[i+1][J])/(0.5*AREAw) * AREAs * AREAw;
-			}
-			// Calculate sourceterm in v-direction:
-			else if (CONS[I][J][2] == true) {
-				SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_v[I][J]/(0.5*AREAs) * AREAs * AREAw;
-				Su[I][J] = tw[I][J] * 0.5 * (v[I][j] + v[I][j+1])/(0.5*AREAs) * AREAs * AREAw;
+			/* Check if one of the source terms is valid */
+			if (CONS[I][J][1] == true || CONS[I][J][2] == true) {
+
+				// Calculate sourceterm in u-direction:
+				if (CONS[I][J][1] == true) {
+					/* store in SP_u and SP, to calc magnitude when both xplus and yplus are active */
+					SP_u[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_u[I][J]/(0.5*AREAw) * AREAs * AREAw;
+					SP[I][J] = SP_u[I][J];
+					Su_u[I][J] = tw[I][J] * 0.5 * (u[i][J] + u[i+1][J])/(0.5*AREAw) * AREAs * AREAw;
+					Su[I][J] = Su_u[I][J];
+				}
+				// Calculate sourceterm in v-direction:
+				if (CONS[I][J][2] == true) {
+					SP_v[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_v[I][J]/(0.5*AREAs) * AREAs * AREAw;
+					SP[I][J] = SP_v[I][J];
+					Su_v[I][J] = tw[I][J] * 0.5 * (v[I][j] + v[I][j+1])/(0.5*AREAs) * AREAs * AREAw;
+					Su[I][J] = Su_v[I][J];
+				}
+				
+				/* Calculate magnitude of source terms if both valid*/
+				if (CONS[I][J][1]*CONS[I][J][2] == true) {
+					SP[I][J] = mag(SP_u[I][J], SP_v[I][J]);
+					Su[I][J] = mag(Su_u[I][J], Su_v[I][J]);
+				}
 			}
 			else {
 				Su[I][J]  = 2. * mut[I][J] * E2[I][J];
 				SP[I][J]  = -rho[I][J] * eps[I][J] / k[I][J];
 			}
+			
 			//#################END SELF ADDED CODE#################//                 
 			
  			Su[I][j] *= AREAw*AREAs;
@@ -1635,7 +1651,11 @@ void memalloc(void)
 	b      = double_2D_matrix(NPI + 2, NPJ + 2);
 
 	SP     = double_2D_matrix(NPI + 2, NPJ + 2);
+	SP_u   = double_2D_matrix(NPI + 2, NPJ + 2);
+	SP_v   = double_2D_matrix(NPI + 2, NPJ + 2);
 	Su     = double_2D_matrix(NPI + 2, NPJ + 2);
+	Su_u   = double_2D_matrix(NPI + 2, NPJ + 2);
+	Su_v   = double_2D_matrix(NPI + 2, NPJ + 2);
 
 	F_u    = double_2D_matrix(NPI + 2, NPJ + 2);
 	F_v    = double_2D_matrix(NPI + 2, NPJ + 2);

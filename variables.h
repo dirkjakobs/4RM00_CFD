@@ -91,7 +91,11 @@ double SAVG;
 double SMAX;
 
 double **SP;
+double **SP_u;
+double **SP_v;
 double **Su;
+double **Su_u;
+double **Su_v;
 
 double **F_u;
 double **F_v;
