@@ -728,9 +728,15 @@ void vcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			//#################END SELF ADDED CODE#################//
 
 			/* The coefficients (hybrid differencing scheme) */
+			
+			/* aW, check current position and for wall to the west (I-1) */
+			if (CONS[I][J][2] == true && CONS[I-1][J][0] == true) aW[I][j]=0.;
+			else      aW[I][j] = max3( Fw, Dw + 0.5*Fw, 0.);
+            
+			/* aW, check current position and for wall to the east (I+1) */
+			if (CONS[I][J][2] == true && CONS[I+1][J][0] == true) aE[I][j]=0.;
+			else      aE[I][j] = max3(-Fe, De - 0.5*Fe, 0.);
 
-			aW[I][j] = max3( Fw, Dw + 0.5*Fw, 0.); //### DIRK: ADD same as north/south at ucoeff
-			aE[I][j] = max3(-Fe, De - 0.5*Fe, 0.);
 			aS[I][j] = max3( Fs, Ds + 0.5*Fs, 0.);
 			aN[I][j] = max3(-Fn, Dn - 0.5*Fn, 0.);
 			aPold    = 0.5*(rho[I][J-1] + rho[I][J])*AREAe*AREAn/Dt;
@@ -943,7 +949,6 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			Ds = Gamma[I  ][J-1]*Gamma[I  ][J  ]/(Gamma[I  ][J-1]*(y[J  ] - y_v[j  ]) + Gamma[I  ][J  ]*(y_v[j  ] - y[J-1]))*AREAs;
 			Dn = Gamma[I  ][J  ]*Gamma[I  ][J+1]/(Gamma[I  ][J  ]*(y[J+1] - y_v[j+1]) + Gamma[I  ][J+1]*(y_v[j+1] - y[J  ]))*AREAn;
 
-			//################BEGIN SELF ADDED CODE################//
 			/* The source terms, page 278 */
 			// Calculate sourceterm in u-direction:
 			if (CONS[I][J][0] == true) {	/* On a wall, fix temperature */
@@ -989,12 +994,7 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			/* aE, check current position and for wall to the east (I+1) */
 			if (CONS[I][J][1]*CONS[I+1][J][0]*CONS[I][J][3] == true) aE[I][J] = 0.;
 			else      aE[I][J] = max3(-Fe, De - 0.5*Fe, 0.);
-			//#################END SELF ADDED CODE#################//
 
-//			aW[I][J] = max3( Fw, Dw + 0.5*Fw, 0.);
-//			aE[I][J] = max3(-Fe, De - 0.5*Fe, 0.);
-//			aS[I][J] = max3( Fs, Ds + 0.5*Fs, 0.);
-//			aN[I][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
 			aPold    = rho[I][J]*AREAe*AREAn/Dt;
 
 			/* eq. 8.31 with time dependent terms (see also eq. 5.14): */
@@ -1210,10 +1210,14 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 
 			/* The coefficients (hybrid differencing sheme) */
 
-			aW[I][J] = max3( Fw, Dw + 0.5*Fw, 0.); ///### DIRK: SHOULD BE 0 NEAR WALL!
-			aE[I][J] = max3(-Fe, De - 0.5*Fe, 0.);
+			/* aW, check current position and for wall to the west (I-1) */
+			if (CONS[I][J][2] == true && CONS[I-1][J][0] == true) aW[I][j]=0.;
+			else      aW[I][j] = max3( Fw, Dw + 0.5*Fw, 0.);
             
-			//################BEGIN SELF ADDED CODE################//
+			/* aW, check current position and for wall to the east (I+1) */
+			if (CONS[I][J][2] == true && CONS[I+1][J][0] == true) aE[I][j]=0.;
+			else      aE[I][j] = max3(-Fe, De - 0.5*Fe, 0.);
+
 			/* aS, check current position and for wall to the south (J-1) */
 			if (CONS[I][J][1] == true && CONS[I][J-1][0] == true) aS[i][J]=0.;
 			else      aS[i][J] = max3( Fs, Ds + 0.5*Fs, 0.);
@@ -1221,7 +1225,6 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			/* aN, check current position and for wall to the north (J+1) */
 			if (CONS[I][J][1] == true && CONS[I][J+1][0] == true) aN[i][J] =0.;
 			else      aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
-			//#################END SELF ADDED CODE#################//
             
             aPold    = rho[I][J]*AREAe*AREAn/Dt;
 

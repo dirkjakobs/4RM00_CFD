@@ -49,13 +49,13 @@ set multiplot layout 1,1 rowsfirst
 #set label 1 'ugrid' at graph 0.0,0.0,0.0 font ',16'
 
 
-#splot 'output.dat' using 1:2:3 with pm3d # --- GRAPH: ugrid
+splot 'output.dat' using 1:2:3 with pm3d # --- GRAPH: ugrid
 
 #splot 'output.dat' using 1:2:4 with pm3d # --- GRAPH: vgrid
 
 #splot 'output.dat' using 1:2:5 with pm3d # --- GRAPH: p
 
-splot 'output.dat' using 1:2:6 with pm3d # --- GRAPH: T
+#splot 'output.dat' using 1:2:6 with pm3d # --- GRAPH: T
 
 #splot 'output.dat' using 1:2:7 with pm3d # --- GRAPH: rho
 
