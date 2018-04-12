@@ -3,8 +3,10 @@
 #define max3(a,b,c) (a > b ? max2(a,c) : max2(b,c))
 #define min2(a,b)   (a < b ? a : b)
 #define min3(a,b,c) (a < b ? min2(a,c) : min2(b,c))
+#define mag(a, b)   sqrt(a*a+b*b)
 
-
+//Pee-function for Prandtl number, see eq. 9.20
+#define Pee(Plam, Pturb) (9.24*(pow((Plam/Pturb),0.75)-1)*(1+0.28*exp(-0.007*(Plam/Pturb))))
 
 extern void readInput (char *name);
 

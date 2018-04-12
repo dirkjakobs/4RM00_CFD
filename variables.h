@@ -24,6 +24,7 @@ double Cp_init;
 double K_init;
 double Gamma_init;
 
+double TZERO;
 double TEMP;
 double U_IN;
 
@@ -51,6 +52,7 @@ double **gammak;
 double **eps;
 double **gammaeps;
 double **delta;
+double **Prandtl;
 double **uplus;
 double **yplus;
 double **yplus1;
@@ -89,7 +91,11 @@ double SAVG;
 double SMAX;
 
 double **SP;
+double **SP_u;
+double **SP_v;
 double **Su;
+double **Su_u;
+double **Su_v;
 
 double **F_u;
 double **F_v;
@@ -109,6 +115,8 @@ double **yplus_u;
 double **yplus_v;
 double **uplus_u;
 double **uplus_v;
+double **Tplus_u;
+double **Tplus_v;
 double **lambda;
 double **p_abs;
 
