@@ -178,13 +178,13 @@ void init(void)
 			u      [i][J] = U_IN;
 			v      [I][j] = 0.;       					/* Velocity in y-direction */
 			p      [I][J] = 0.;       					/* Relative pressure */
-			T      [I][J] = 273.;     					/* Temperature */
+			T      [I][J] = TZERO;     					/* Temperature, obtained from text file*/ 
 			k      [I][J] = 1e-3;     					/* k */
 			eps    [I][J] = 1e-4;     					/* epsilon */
-			uplus  [I][J] = 1.;                         /* uplus */
-			yplus1 [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (y[1] - y[0]);   /* yplus1 */
-			yplus2 [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (y[NPJ+1] - y[NPJ]);   /* yplus2 */
-			yplus  [I][J] = 1.;                         /* yplus*/
+//			uplus  [I][J] = 1.;                         /* uplus */
+//			yplus1 [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (y[1] - y[0]);   /* yplus1 */
+//			yplus2 [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (y[NPJ+1] - y[NPJ]);   /* yplus2 */
+//			yplus  [I][J] = 1.;                         /* yplus*/
 			tw     [I][J] = 5.;                         /* tw */
 			rho    [I][J] = rho_init;      				/* Density */
 			mu     [I][J] = mu_init;    				/* Viscosity */
@@ -205,6 +205,7 @@ void init(void)
 			yplus_v [I][J] = 1.;
 			uplus_u [I][J] = 1.;
 			uplus_v [I][J] = 1.;
+//			Tplus_u [I][J] = 1.;
 			
 			// Guess yplus near CONS		
 			// Guess yplus_u:
@@ -287,7 +288,7 @@ void bound(void)
 			eps[I][0] = eps[I][1];
 			T[I][0] = T[I][1];
 		}
-		// Upper wall gradient boundary conditions
+		// Upper wall gradient boundary conditionstrue
 		if (CONS[I][NPJ+1][0] != true) {
 			u[i][NPJ+1] = u[i][NPJ];
 			v[I][NPJ+1] = v[I][NPJ];
@@ -966,7 +967,7 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			}
 			// Calculate sourceterm in v-direction:
 			else if (CONS[I][J][2]*CONS[I][J][3] == true) {
-				if(yplus_u[I][J] < 11.63) 	/* laminar flow, eq. 9.13 */
+				if(yplus_v[I][J] < 11.63) 	/* laminar flow, eq. 9.13 */
 					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAw/(0.5*AREAs);
 				else 						/* Turbulent flow, eq. 9.24 */
 					SP[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) *Cp[I][J] / Tplus_v[I][J] * AREAw;
@@ -989,11 +990,11 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			else      aN[I][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
 			
 			/* aW, check current position and for wall to the west (I-1) */
-			if (CONS[I][J][1]*CONS[I-1][J][0]*CONS[I][J][3] == true) aW[I][J] = 0.;
+			if (CONS[I][J][2]*CONS[I-1][J][0]*CONS[I][J][3] == true) aW[I][J] = 0.;
 			else      aW[I][J] = max3( Fw, Dw + 0.5*Fw, 0.);
 			
 			/* aE, check current position and for wall to the east (I+1) */
-			if (CONS[I][J][1]*CONS[I+1][J][0]*CONS[I][J][3] == true) aE[I][J] = 0.;
+			if (CONS[I][J][2]*CONS[I+1][J][0]*CONS[I][J][3] == true) aE[I][J] = 0.;
 			else      aE[I][J] = max3(-Fe, De - 0.5*Fe, 0.);
 
 			aPold    = rho[I][J]*AREAe*AREAn/Dt;
@@ -1090,16 +1091,7 @@ void epscoeff(double **aE, double **aW, double **aN, double **aS, double **aP, d
 				SP[I][J] = -C2eps * rho[I][J] * eps[I][J] / (k[I][J] + SMALL);
 			}
 			//#################END SELF ADDED CODE#################// 
-			
-//			if (J==1 || J==NPJ) {
-//				SP[I][J] = -LARGE;
-//				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*0.5*AREAw)*LARGE;
-//			}
-//			else {
-//				Su[I][J] = C1eps * eps[I][J] / k[I][J] * 2. * mut[I][J] * E2[I][J];
-//				SP[I][J] = -C2eps * rho[I][J] * eps[I][J] / (k[I][J] + SMALL);
-//			}
-                                  
+			                                 
 			Su[I][J] *= AREAw*AREAs;
 			SP[I][J] *= AREAw*AREAs;
 
@@ -1146,13 +1138,11 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 
 	conv();
     viscosity();
-//    properties(); // Including viscosity();
-    
-    calculateuplus(); // PIM: Only for top and bottem wall!
-    
+   
 	//################BEGIN SELF ADDED CODE################//
-	
-//    calc_uplus(); // PIM: With wall functions, for CONS
+//    properties(); // Including viscosity();	
+    
+	calc_uplus(); // PIM: With wall functions, for CONS
 
 	//#################END SELF ADDED CODE#################//
     
@@ -1231,7 +1221,7 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			if (CONS[I][J][2] == true && CONS[I-1][J][0] == true) aW[I][j]=0.;
 			else      aW[I][j] = max3( Fw, Dw + 0.5*Fw, 0.);
             
-			/* aW, check current position and for wall to the east (I+1) */
+			/* aE, check current position and for wall to the east (I+1) */
 			if (CONS[I][J][2] == true && CONS[I+1][J][0] == true) aE[I][j]=0.;
 			else      aE[I][j] = max3(-Fe, De - 0.5*Fe, 0.);
 
@@ -1262,51 +1252,6 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 } /*kcoeff*/
 
 /* ################################################################# */
-void calculateuplus(void)
-/* ################################################################# */
-{
-/***** Purpose: Calculate uplus, yplus and tw  ******/
-
-	int    i,j,I, J;
-
-	viscosity();
-//	properties(); // Including viscosity();
-
-
-	for (I = 0; I <= NPI; I++){
-	    i=I;
-			if (yplus1[I][1] < 11.63) {
-                  tw[I][1]      = mu[I][1]*0.5*(u[i][1]+u[i+1][1])/(y[1] -y[0]);
-                  yplus1[I][1]  = sqrt(rho[I][1] * fabs(tw[I][1])) * (y[1] - y[0]) / mu[I][1];
-                  yplus[I][1]   = yplus1[I][1];
-                  uplus[I][1]   = yplus[I][1];
-            }/* if */
-            else {
-                  tw[I][1]      = rho[I][1]*pow(Cmu,0.25)*sqrt(k[I][1])*0.5*(u[i][1]+u[i+1][1])/uplus[I][1];
-                  yplus1[I][1]  = sqrt(rho[I][1] * fabs(tw[I][1])) * (y[1] - y[0]) / mu[I][1];
-                  yplus [I][1]  = yplus1[I][1];
-                  uplus [I][1]  = log(ERough*yplus[I][1])/kappa;
-            }/* else */
-            
-            if (yplus2[I][NPJ] < 11.63) {
-                  tw[I][NPJ]      = mu[I][NPJ]*0.5*(u[i][NPJ]+u[i+1][NPJ])/(y[NPJ+1] - y[NPJ]);
-                  yplus2[I][NPJ]  = sqrt(rho[I][NPJ] * fabs(tw[I][NPJ])) * (y[NPJ+1] - y[NPJ]) / mu[I][NPJ];
-                  yplus[I][NPJ]   = yplus2[I][NPJ];
-                  uplus[I][NPJ]   = yplus[I][NPJ];
-            }/* if */
-            else {
-                  tw[I][NPJ]      = rho[I][NPJ]*pow(Cmu,0.25)*sqrt(k[I][NPJ])*0.5*(u[i][NPJ]+u[i+1][NPJ])/uplus[I][NPJ];
-                  yplus2[I][NPJ]  = sqrt(rho[I][NPJ] * fabs(tw[I][NPJ])) * (y[NPJ+1] - y[NPJ]) / mu[I][NPJ];
-                  yplus [I][NPJ]  = yplus2[I][NPJ];
-                  uplus [I][NPJ]  = log(ERough*yplus[I][NPJ])/kappa;
-            }/* else */
-                  
-           } /* for */
-} /* cuplus */
-
-//################BEGIN SELF ADDED CODE################//
-
-/* ################################################################# */
 void calc_uplus(void)
 /* ################################################################# */
 {
@@ -1316,8 +1261,8 @@ void calc_uplus(void)
 	int    i, j, I, J;
 	double Dx, Dy;
 	
-//	viscosity();
-	properties(); // Including viscosity();
+	viscosity();
+//	properties(); // Including viscosity();
 	
 	// PIM: Make Dx and Dy global!
 	Dx = XMAX/NPI;
@@ -1336,8 +1281,6 @@ void calc_uplus(void)
                   	yplus_u[I][J]  = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dy) / mu[I][J];
                   	uplus_u[I][J]  = yplus_u[I][J];
                   	
-//                 	yplus[I][J]    = yplus_u[I][J]; //PIM: test, wordt niet gebruikt in programma
-//					uplus[I][J]    = yplus[I][J];   //PIM: test, wordt niet gebruikt in programma
             	}/* if */
             	else {
                   	tw[I][J]       = rho[I][J] * pow(Cmu,0.25) * sqrt(k[I][J]) * 0.5 * (u[i][J]+u[i+1][J]) / uplus_u[I][J];
@@ -1345,8 +1288,6 @@ void calc_uplus(void)
                   	uplus_u [I][J] = log(ERough*yplus_u[I][J])/kappa;
 					Tplus_u [I][J] = turb_Prandtl*(uplus_u[I][J] + Pee(turb_Prandtl, Prandtl[I][J])); /* Turbulet T+, eq. 3.50 */
                   	
-//                 	yplus[I][J]    = yplus_u [I][J]; //PIM: test, wordt niet gebruikt in programma
-//					uplus[I][J]    = log(ERough*yplus[I][J])/kappa; //PIM: test, wordt niet gebruikt in programma
             	}/* else */
 	        } /* if */
 	        
@@ -1358,8 +1299,6 @@ void calc_uplus(void)
                   	yplus_v[I][J]  = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dx) / mu[I][J];
                   	uplus_v[I][J]  = yplus_v[I][J];
                   	
-//                 	yplus[I][J]    = yplus_v[I][J]; //PIM: test, wordt niet gebruikt in programma
-//					uplus[I][J]    = yplus[I][J];   //PIM: test, wordt niet gebruikt in programma                	
             	}/* if */
             	else {
                   	tw[I][J]       = rho[I][J] * pow(Cmu,0.25) * sqrt(k[I][J]) * 0.5 * (v[I][j]+v[I][j+1]) / uplus_v[I][J];
@@ -1367,8 +1306,6 @@ void calc_uplus(void)
                   	uplus_v [I][J] = log(ERough*yplus_v[I][J])/kappa;
 					Tplus_v [I][J] = turb_Prandtl*(uplus_v[I][J] + Pee(turb_Prandtl, Prandtl[I][J])); /* Turbulet T+, eq. 3.50 */
                   	
-//                 	yplus[I][J]    = yplus_v [I][J]; //PIM: test, wordt niet gebruikt in programma
-//					uplus[I][J]    = log(ERough*yplus[I][J])/kappa; //PIM: test, wordt niet gebruikt in programma
             	}/* else */
 	        } /* if */
 			
@@ -1740,6 +1677,10 @@ void readInput (char *name)
 		CONS[I][J][0] = true;
 		/* temperature constrain in 3 */
 		CONS[I][J][3] = ad;
+		
+		printf("CONS[I][J][0] =  %4d ",CONS[I][J][0]);
+		printf("CONS[I][J][3] =  %4d ",CONS[I][J][3]);
+		printf("\n");
 	}
 
 	// Print results
@@ -1756,6 +1697,10 @@ void readInput (char *name)
 		CONS[I][J][1] = true;
 		/* temperature constrain in 3 */
 		CONS[I][J][3] = ad;
+		
+		printf("CONS[I][J][1] =  %4d ",CONS[I][J][1]);
+		printf("CONS[I][J][3] =  %4d ",CONS[I][J][3]);
+		printf("\n");
 	}
 
 	// Print results
@@ -1769,14 +1714,18 @@ void readInput (char *name)
 	for (iyplus_v = 0; iyplus_v < nyplus_v; iyplus_v++) {
 		fscanf( fp, " %d  %d  %d", &I, &J, &ad);
 		/* yplus_u constrain in 2 */
-		CONS[I][J][2] == true;
+		CONS[I][J][2] = true;
 		/* temperature constrain in 3 */
 		CONS[I][J][3] = ad;
+		
+		printf("CONS[I][J][2] =  %4d ",CONS[I][J][2]);
+		printf("CONS[I][J][3] =  %4d ",CONS[I][J][3]);
+		printf("\n");
 	}
 
 	// Print results
 	printf("         yplus_v =  %4d \n",nyplus_v);
 	printf("\n");
-
+	
 } /* readinput */
 
