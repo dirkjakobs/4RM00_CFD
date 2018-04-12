@@ -15,14 +15,17 @@ set style data lines
 
 #Contour lines:
 set contour
+ # Position legend countours
+ set key outside right bottom        # {left | right | center} {top | bottom | center}
+
 
 #Range of axis:
-#set xrange [ 0 : 1.0 ] noreverse nowriteback
-#set yrange [ 0 : 0.2 ] noreverse nowriteback
+set xrange [ 0.0 : 2.0 ] noreverse nowriteback
+set yrange [ 0 : 0.2 ] noreverse nowriteback
 #set zrange [ 0 : 0.8 ] noreverse nowriteback
 
 #Set equal scale along all three axis
-#set view equal xy
+set view equal xyz
 
 #Labels:
 set xlabel "X axis" 
@@ -44,18 +47,18 @@ scale = 0.15
 #show bind
 
 ### Start multiplot 
-set multiplot layout 2,3 rowsfirst
+set multiplot layout 1,1 rowsfirst
 
 #set label 1 'ugrid' at graph 0.0,0.0,0.0 font ',16'
 
 
 splot 'output.dat' using 1:2:3 with pm3d # --- GRAPH: ugrid
 
-splot 'output.dat' using 1:2:4 with pm3d # --- GRAPH: vgrid
+#splot 'output.dat' using 1:2:4 with pm3d # --- GRAPH: vgrid
 
-splot 'output.dat' using 1:2:5 with pm3d # --- GRAPH: p
+#splot 'output.dat' using 1:2:5 with pm3d # --- GRAPH: p
 
-splot 'output.dat' using 1:2:6 with pm3d # --- GRAPH: T
+#splot 'output.dat' using 1:2:6 with pm3d # --- GRAPH: T
 
 #splot 'output.dat' using 1:2:7 with pm3d # --- GRAPH: rho
 
@@ -67,17 +70,17 @@ splot 'output.dat' using 1:2:6 with pm3d # --- GRAPH: T
 
 #splot 'output.dat' using 1:2:11 with pm3d # --- GRAPH: eps
 
-#splot 'output.dat' using 1:2:12 with pm3d # --- GRAPH: uplus
+#splot 'output.dat' using 1:2:12 with pm3d # --- GRAPH: Tplus_u
 
-#splot 'output.dat' using 1:2:13 with pm3d # --- GRAPH: yplus
+#splot 'output.dat' using 1:2:13 with pm3d # --- GRAPH: Tplus_v
 
-splot 'output.dat' using 1:2:14 with pm3d # --- GRAPH: yplus1 / yplus_u
+#splot 'output.dat' using 1:2:14 with pm3d # --- GRAPH: yplus_u
 
-splot 'output.dat' using 1:2:15 with pm3d # --- GRAPH: yplus2 / yplus_v
+#splot 'output.dat' using 1:2:15 with pm3d # --- GRAPH: yplus_v
 
-#splot 'output.dat' using 1:2:16 with pm3d # --- GRAPH: -      / uplus_u
+#splot 'output.dat' using 1:2:16 with pm3d # --- GRAPH: uplus_u
 
-#splot 'output.dat' using 1:2:17 with pm3d # --- GRAPH: -      / uplus_v
+#splot 'output.dat' using 1:2:17 with pm3d # --- GRAPH: uplus_v
 
 #splot 'vort.dat' using 1:2:3 with pm3d # --- GRAPH: x[I], y[J], vorticity
 

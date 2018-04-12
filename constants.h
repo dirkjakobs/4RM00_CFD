@@ -7,8 +7,8 @@
 //#define T_ITER     1         /* number of Newton iterations for T equation [-] */
 //#define EPS_ITER   1         /* number of Newton iterations for Eps equation [-] */
 //#define K_ITER     1         /* number of Newton iterations for K equation [-] */
-#define SMAXneeded 1E-7      /* maximum accepted error in mass balance [kg/s] was 1E-8*/
-#define SAVGneeded 1E-8      /* maximum accepted average error in mass balance [kg/s] was 1E-9*/
+#define SMAXneeded 1E-8      /* maximum accepted error in mass balance [kg/s] was 1E-8*/
+#define SAVGneeded 1E-9      /* maximum accepted average error in mass balance [kg/s] was 1E-9*/
 #define LARGE      1E30      /* arbitrary very large value [-] */
 #define SMALL      1E-30     /* arbitrary very small value [-] */
 #define P_ATM      101000.   /* athmospheric pressure [Pa] */
