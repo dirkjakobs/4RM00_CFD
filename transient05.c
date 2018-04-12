@@ -248,8 +248,8 @@ void bound(void)
 
 	for (I = 0; I <= NPI + 1; I++) {
 		/* Temperature at the walls in Kelvin */
-		T[I][0] = 273.; /* bottom wall */
-		T[I][NPJ+1] = 273.; /* top wall */
+		T[I][0] = TZERO; /* bottom wall */
+		T[I][NPJ+1] = TZERO; /* top wall */
 	} /* for J */
 
 	globcont();
@@ -952,8 +952,8 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 
 			/* The source terms, page 278 */
 
-			// Calculate sourceterm in u-direction:
-			if (CONS[I][J][0] == true) {	/* On a wall, fix temperature */
+			// Calculate sourceterm of T:
+			if (CONS[I][J][0]*CONS[I][J][3] == true) {	/* On a wall, fix temperature */
 				SP[I][J] = - LARGE;
 				Su[I][J] = LARGE*TEMP;
 			}
