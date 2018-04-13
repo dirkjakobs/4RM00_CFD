@@ -1108,6 +1108,10 @@ void epscoeff(double **aE, double **aW, double **aN, double **aS, double **aP, d
 				SP[I][J] = -LARGE;
 				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*0.5*AREAe)*LARGE;
 			}
+			else if (CONS[I][J][1]*CONS[I][J][2] == true) { 
+				SP[I][J] = -LARGE; 
+				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*mag(0.5*AREAw,0.5*AREAe))*LARGE; 
+			}
 			else {
 				Su[I][J] = C1eps * eps[I][J] / k[I][J] * 2. * mut[I][J] * E2[I][J];
 				SP[I][J] = -C2eps * rho[I][J] * eps[I][J] / (k[I][J] + SMALL);
@@ -1203,7 +1207,11 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			
 			/* The source terms */
 			/* Check if one of the source terms is valid */
-			if (CONS[I][J][1] == true || CONS[I][J][2] == true) {
+			if (CONS[I][J][0] == true) {
+				Su[I][J]  = 0;
+				SP[I][J]  = 0;			
+			}
+			else if (CONS[I][J][1] == true || CONS[I][J][2] == true) {
 
 				// Calculate sourceterm in u-direction:
 				if (CONS[I][J][1] == true) {

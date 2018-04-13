@@ -20,12 +20,13 @@ set contour
 
 
 #Range of axis:
-set xrange [ 0.0 : 2.0 ] noreverse nowriteback
+set xrange [ 0.0 : 1.0 ] noreverse nowriteback
 set yrange [ 0 : 0.2 ] noreverse nowriteback
-#set zrange [ 0 : 0.8 ] noreverse nowriteback
+#set zrange [ -2.0 : 5.0 ] noreverse nowriteback
 
 #Set equal scale along all three axis
-set view equal xyz
+#set view equal xyz
+
 
 #Labels:
 set xlabel "X axis" 
@@ -47,12 +48,12 @@ scale = 0.15
 #show bind
 
 ### Start multiplot 
-set multiplot layout 1,1 rowsfirst
+set multiplot layout 2,1 rowsfirst
 
 #set label 1 'ugrid' at graph 0.0,0.0,0.0 font ',16'
 
 
-splot 'output.dat' using 1:2:3 with pm3d # --- GRAPH: ugrid
+#splot 'output.dat' using 1:2:3 with pm3d # --- GRAPH: ugrid
 
 #splot 'output.dat' using 1:2:4 with pm3d # --- GRAPH: vgrid
 
@@ -66,9 +67,9 @@ splot 'output.dat' using 1:2:3 with pm3d # --- GRAPH: ugrid
 
 #splot 'output.dat' using 1:2:9 with pm3d # --- GRAPH: Gamma
 
-#splot 'output.dat' using 1:2:10 with pm3d # --- GRAPH: k
+splot 'output.dat' using 1:2:10 with pm3d # --- GRAPH: k
 
-#splot 'output.dat' using 1:2:11 with pm3d # --- GRAPH: eps
+splot 'output.dat' using 1:2:11 with pm3d # --- GRAPH: eps
 
 #splot 'output.dat' using 1:2:12 with pm3d # --- GRAPH: Tplus_u
 
