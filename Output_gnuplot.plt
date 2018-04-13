@@ -20,7 +20,7 @@ set contour
 
 
 #Range of axis:
-set xrange [ 0.0 : 1.0 ] noreverse nowriteback
+#set xrange [ 0.0 : 1.0 ] noreverse nowriteback
 set yrange [ 0 : 0.2 ] noreverse nowriteback
 #set zrange [ -2.0 : 5.0 ] noreverse nowriteback
 
@@ -40,7 +40,7 @@ set zlabel  offset character -3, 0, 0 font "" textcolor lt -1 norotate
 
 #splot 'output.dat' using 1:2:12 with pm3d
 
-scale = 0.15
+scale = 0.01
 #plot 'output.dat' using 1:2:($3*scale):($4*scale) with vectors head filled lw 2
 
 
@@ -53,13 +53,13 @@ set multiplot layout 2,1 rowsfirst
 #set label 1 'ugrid' at graph 0.0,0.0,0.0 font ',16'
 
 
-splot 'output.dat' using 1:2:3 with pm3d # --- GRAPH: ugrid
+#splot 'output.dat' using 1:2:3 with pm3d # --- GRAPH: ugrid
 
-splot 'output.dat' using 1:2:4 with pm3d # --- GRAPH: vgrid
+#splot 'output.dat' using 1:2:4 with pm3d # --- GRAPH: vgrid
 
-#splot 'output.dat' using 1:2:5 with pm3d # --- GRAPH: p
+splot 'output.dat' using 1:2:5 with pm3d # --- GRAPH: p
 
-#splot 'output.dat' using 1:2:6 with pm3d # --- GRAPH: T
+splot 'output.dat' using 1:2:6 with pm3d # --- GRAPH: T
 
 #splot 'output.dat' using 1:2:7 with pm3d # --- GRAPH: rho
 

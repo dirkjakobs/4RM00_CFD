@@ -21,8 +21,9 @@ int    K_ITER;
 double rho_init;
 double mu_init;
 double Cp_init;
-double K_init;
+double lambda_init;
 double Gamma_init;
+
 
 double TZERO;
 double TEMP;
@@ -120,6 +121,8 @@ double **Tplus_u;
 double **Tplus_v;
 double **lambda;
 double **p_abs;
+double **Gamma_L;
+double **Gamma_T;
 
 
 

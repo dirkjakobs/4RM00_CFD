@@ -63,10 +63,10 @@ int main(int argc, char *argv[])
 			for (iter_T = 0; iter_T < T_ITER; iter_T++)
 				solve(T, b, aE, aW, aN, aS, aP);
 
-			viscosity(); // PIM: Moved to properties()
+//			viscosity(); // PIM: Moved to properties()
 
 			//################BEGIN SELF ADDED CODE################//	
-//			properties(); // Including viscosity();
+			properties(); // Including viscosity();
 			//#################END SELF ADDED CODE#################//
 			
 			bound();
@@ -189,7 +189,7 @@ void init(void)
 			rho    [I][J] = rho_init;      				/* Density */
 			mu     [I][J] = mu_init;    				/* Viscosity */
 			Cp     [I][J] = Cp_init;     				/* J/(K*kg) Heat capacity - assumed constant for this problem */
-			Gamma  [I][J] = K_init/Cp[I][J]; 			/* Thermal conductivity divided by heat capacity */
+			Gamma  [I][J] = lambda_init/Cp[I][J];            /* Thermal conductivity divided by heat capacity - assumed laminair in initial state */
 			Prandtl[I][J] = mu[I][J]/Gamma[I][J]; 		/* laminar Prandtl number mu*Cp/K (eq. 3.50) */
 			u_old  [i][J] = u[i][J];  					/* Velocity in x-direction old timestep */
 			v_old  [I][j] = v[I][j];  					/* Velocity in y-direction old timestep */
@@ -199,21 +199,18 @@ void init(void)
 			k_old  [I][J] = k[I][J];    				/* k old timestep*/
 			
 			//################BEGIN SELF ADDED CODE################//
-			// Set yplus and uplus to 1 (Can be optimised, put yplus in elsif below etc.)
-
+			// Set yplus and uplus to 1
 			yplus_u [I][J] = 1.;
 			yplus_v [I][J] = 1.;
 			uplus_u [I][J] = 1.;
 			uplus_v [I][J] = 1.;
-//			Tplus_u [I][J] = 1.;
 			
-			// Guess yplus near CONS		
-			// Guess yplus_u:
+			// Guess yplus_u near object/wall		
 	        if (CONS[I][J][1] == true) {
 				yplus_u [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (0.5*Dy);
 	        } /* if */
 	        
-	        // Guess yplus_v
+	        // Guess yplus_v near object/wall	
 	        if (CONS[I][J][2] == true) {
 				yplus_v [I][J] = sqrt(rho[I][J] * v[I][J] / mu[I][J]) * (0.5*Dx);
 	        } /* if */		
@@ -1049,8 +1046,8 @@ void epscoeff(double **aE, double **aW, double **aN, double **aS, double **aP, d
 	Jend   = NPJ;
 
 	conv();
-    viscosity();
-//    properties(); // Including viscosity();
+//    viscosity();
+    properties(); // Including viscosity();
     
 	for (I = Istart; I <= Iend; I++) {
 		i = I;
@@ -1157,10 +1154,10 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 	Jend   = NPJ;
 
 	conv();
-    viscosity();
+//    viscosity();
    
 	//################BEGIN SELF ADDED CODE################//
-//    properties(); // Including viscosity();	
+    properties(); // Including viscosity();	
     
 	calc_uplus(); // PIM: With wall functions, for CONS
 
@@ -1287,8 +1284,8 @@ void calc_uplus(void)
 	int    i, j, I, J;
 	double Dx, Dy;
 	
-	viscosity();
-//	properties(); // Including viscosity();
+//	viscosity();
+	properties(); // Including viscosity();
 	
 	// PIM: Make Dx and Dy global!
 	Dx = XMAX/NPI;
@@ -1347,20 +1344,20 @@ void calc_uplus(void)
 
 //#################END SELF ADDED CODE#################//
 
-/* ################################################################# */
-void viscosity(void)
-/* ################################################################# */
-{
-/***** Purpose: Calculate the viscosity in the fluid as a function of temperature *****/
-	int   I, J;
-
-	for (I = 0; I <= NPI; I++)
-		for (J = 1; J <= NPJ + 1; J++) {
-            mut[I][J] = rho[I][J]*Cmu*sqr(k[I][J])/(eps[I][J]+SMALL);
-			mueff[I][J] = mu[I][J] + mut[I][J];
-      } /* for */
-
-} /* viscosity */
+///* ################################################################# */
+//void viscosity(void)
+///* ################################################################# */
+//{
+///***** Purpose: Calculate the viscosity in the fluid as a function of temperature *****/
+//	int   I, J;
+//
+//	for (I = 0; I <= NPI; I++)
+//		for (J = 1; J <= NPJ + 1; J++) {
+//            mut[I][J] = rho[I][J]*Cmu*sqr(k[I][J])/(eps[I][J]+SMALL);
+//			mueff[I][J] = mu[I][J] + mut[I][J];
+//      } /* for */
+//
+//} /* viscosity */
 
 //################BEGIN SELF ADDED CODE################//
 
@@ -1371,19 +1368,26 @@ void properties(void)
 /***** Purpose: Calculate the properties in the fluid as a function of temperature *****/
 	int   I, J;
 
-	for (I = 0; I <= NPI; I++)
-		for (J = 1; J <= NPJ + 1; J++) {
-			
+	for (I = 0; I <= NPI; I++) // PIM: why not NPI+1?
+		for (J = 1; J <= NPJ + 1; J++) { // PIM: why not J=0?
+			// Calculate the density of air as function of pressure and temperature (does not converge)		
 //			p_abs  [I][J] = P_ATM + p[I][J]; /* Absolute pressure [Pa]*/
-//			rho    [I][J] = 28.964*p_abs[I][J]/T[I][J]/GAS_CONS;      /* Density */
-//			mu     [I][J] = 352.975/T[I][J]*0.000001*(0.0264*pow(((T[I][J]-273.15)+50),1.24)+10);    /* Viscosity */
-//			Cp     [I][J] = 1031.311-0.2028999*T[I][J]+0.0004005271*T[I][J]*T[I][J];     /* J/(K*kg) Heat capacity - assumed constant for this problem */
-//			lambda [I][J] = 0.005+T[I][J]/13944;     /* W/(K*m) Thermal conductivity */
-//			Gamma  [I][J] = lambda[I][J]/Cp[I][J]; /* Thermal conductivity divided by heat capacity */
+//			rho    [I][J] = 28.964*p_abs[I][J]/T[I][J]/GAS_CONS;      /* Density, temperature and pressure dependent */
+//			rho    [I][J] = 28.964*P_ATM/T[I][J]/GAS_CONS;      /* Density, temperature and constant pressure */
+			
+			// Calculate properties of air as function of temperature
+			mu     [I][J] = 352.975/T[I][J]*0.000001*(0.0264*pow(((T[I][J]-273.15)+50),1.24)+10);    /* Viscosity */
+			Cp     [I][J] = 1031.311-0.2028999*T[I][J]+0.0004005271*T[I][J]*T[I][J];     /* J/(K*kg) Heat capacity - assumed constant for this problem */
+			lambda [I][J] = 0.005+T[I][J]/13944;     /* W/(K*m) Thermal conductivity */
 
-			// Calculate the viscosity in the fluid as a function of temperature (PIM: From original code)
+			// Calculate the viscosity in the fluid as a function of temperature
             mut[I][J] = rho[I][J]*Cmu*sqr(k[I][J])/(eps[I][J]+SMALL);
 			mueff[I][J] = mu[I][J] + mut[I][J];
+			
+			// Calculate the laminar, turbulent and effective Gamma
+			Gamma_L[I][J] = lambda[I][J]/Cp[I][J]; 			/* Thermal conductivity divided by heat capacity for laminar case*/
+			Gamma_T[I][J] = mut[I][J]/turb_Prandtl;			/* Thermal conductivity divided by heat capacity for turbulent case*/
+			Gamma  [I][J] = Gamma_L[I][J]+Gamma_T[I][J];	/* Thermal conductivity divided by heat capacity (effective)*/
       } /* for */
 
 } /* properties */
@@ -1395,11 +1399,18 @@ void printConv(double time, int iter)
 /* ################################################################# */
 {
 /***** Purpose: Creating result table ******/
-	if (time == Dt)
-		printf ("Time\t u\t v\t SMAX\t SAVG\n");
+//	if (time == Dt)
+//		printf ("ITER \t Time \t u \t v \t T \t SMAX \t SAVG \n");
+//
+//	printf ("%4d %10.3e\t%10.2e\t%10.2e\t%10.2e\t%10.2e\t%10.2e\n", 
+//             iter, time, u[3*NPI/10][2*NPJ/5], v[3*NPI/10][2*NPJ/5], T[3*NPI/10][2*NPJ/5], SMAX, SAVG);
+    ////////////////PIM///////////////////////////         
+    if (time == Dt)
+		printf ("ITER  Time\t   u\t       v\t   T\t       SMAX\t   SAVG\n");
 
-	printf ("%4d %10.3e\t%10.2e\t%10.2e\t%10.2e\t%10.2e\t%10.2e\n", 
-             iter, time, u[3*NPI/10][2*NPJ/5], v[3*NPI/10][2*NPJ/5], T[3*NPI/10][2*NPJ/5], SMAX, SAVG);
+	printf ("%4d %11.3e %11.2e %11.2e %11.2e %11.2e %11.2e\n", 
+             iter, time, u[NPI][NPJ/2], v[NPI][NPJ/2], T[NPI][NPJ/2], SMAX, SAVG);
+    ////////////////PIM///////////////////////////
 
 } /* printConv */
 
@@ -1422,9 +1433,6 @@ void output(void)
 			j = J;
 			ugrid = 0.5*(u[i][J]+u[i+1][J  ]);
 			vgrid = 0.5*(v[I][j]+v[I  ][j+1]);
-//			fprintf(fp, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
-//			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], uplus[I][J], yplus[I][J], yplus1[I][J], yplus2[I][J]);
-////			             1     2     3      4      5        6        7          8         9            10       11         12           13           14            15
 
 			//################BEGIN SELF ADDED CODE################//
 			fprintf(fp, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
@@ -1635,7 +1643,10 @@ void memalloc(void)
 	Tplus_u = double_2D_matrix(NPI + 2, NPJ + 2); 
 	Tplus_v = double_2D_matrix(NPI + 2, NPJ + 2);
 	
-	Prandtl = double_2D_matrix(NPI + 2, NPJ + 2);  
+	Prandtl = double_2D_matrix(NPI + 2, NPJ + 2);
+	Gamma_L = double_2D_matrix(NPI + 2, NPJ + 2);
+	Gamma_T = double_2D_matrix(NPI + 2, NPJ + 2);
+	   
 	/* for Properties: */
 	lambda  = double_2D_matrix(NPI + 2, NPJ + 2);
 	p_abs   = double_2D_matrix(NPI + 2, NPJ + 2);
@@ -1678,7 +1689,7 @@ void readInput (char *name)
 	fscanf( fp, "%*s %lf", &rho_init );
 	fscanf( fp, "%*s %lf", &mu_init );
 	fscanf( fp, "%*s %lf", &Cp_init );
-	fscanf( fp, "%*s %lf", &K_init );
+	fscanf( fp, "%*s %lf", &lambda_init );
 
 	// print grid parameters
 	printf("From text file:\nGrid:           XMAX = %5.2f [m]         YMAX =  %4.2f [m]\n",XMAX,YMAX);
@@ -1688,7 +1699,7 @@ void readInput (char *name)
 	printf("             PC_ITER =  %4d         EPS_ITER =  %4d           K_ITER =  %4d\n", PC_ITER, EPS_ITER, K_ITER);
 	printf("Physics:       Temp. =   %3.0f [K]         U_IN = %5.1f [m/s]\n",TEMP,U_IN);
 	printf("                 rho =   %3.0f [kg/m^3]      mu = %5.0e [Pa*s]\n",rho_init, mu_init);
-	printf("                  Cp =  %4.0f [J/kg/K]       K = %5.3f [W/m/K]\n",Cp_init, K_init);  
+	printf("                  Cp =  %4.0f [J/kg/K]       K = %5.3f [W/m/K]\n",Cp_init, lambda_init);  
 
 	// Allocate memory to save constraints
 	CONS  = bool_3D_matrix(NPI + 2, NPJ + 2, 4);

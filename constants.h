@@ -15,8 +15,8 @@
 //#define U_IN       0.1     /* in flow velocity [m/s] */ ### FROM TEXT FILE ###
 
 #define Cmu        0.09
-#define sigmak       1.
-#define sigmaeps     1.3
+#define sigmak     1.
+#define sigmaeps   1.3
 #define C1eps      1.44
 #define C2eps      1.92
 #define kappa      0.4187
