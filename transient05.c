@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 /* ################################################################# */
 {
 	int    iter_u, iter_v, iter_pc, iter_T, iter_eps, iter_k;
-	double du, dv, time, TOTAL_TIME = 10.;
+	double du, dv, time;
 	
 	readInput("constraints.dat");
 
@@ -175,7 +175,7 @@ void init(void)
 			j = J;
 //			u      [i][J] = U_IN*1.5*(1.-sqr(2.*(y[J]-YMAX/2.)/YMAX));     /* Guess velocity profile in x-direction */
 
-			u      [i][J] = U_IN;
+			u      [i][J] = U_IN;						/* Guess velocity profile in x-direction */
 			v      [I][j] = 0.;       					/* Velocity in y-direction */
 			p      [I][J] = 0.;       					/* Relative pressure */
 			T      [I][J] = TZERO;   					/* Temperature, obtained from text file*/ 
@@ -283,7 +283,8 @@ void bound(void)
 		// Lower wall gradient boundary conditions
 		if (CONS[I][0][0] != true) {
 			u[i][0] = u[i][1];
-			v[I][0] = v[I][1];
+//			v[I][0] = v[I][1];
+			v[I][0] = 0;				// velocity at walls in y-direction should be zero.
 			k[I][0] = k[I][1];
 			eps[I][0] = eps[I][1];
 			T[I][0] = T[I][1];
@@ -291,11 +292,13 @@ void bound(void)
 		// Upper wall gradient boundary conditionstrue
 		if (CONS[I][NPJ+1][0] != true) {
 			u[i][NPJ+1] = u[i][NPJ];
-			v[I][NPJ+1] = v[I][NPJ];
+//			v[I][NPJ+1] = v[I][NPJ];
+			v[I][NPJ+1] = 0;			// velocity at walls in y-direction should be zero.
 			k[I][NPJ+1] = k[I][NPJ];
 			eps[I][NPJ+1] = eps[I][NPJ];
 			T[I][NPJ+1] = T[I][NPJ];
 		}
+
 	} /* for I */
 	
 	//#################END SELF ADDED CODE#################//
@@ -577,7 +580,10 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 				
 			//################BEGIN SELF ADDED CODE################//
 			// Calculate sourceterm in u-direction:
-			if (CONS[I][J][1] == true) {
+			if (CONS[i][J][0] == true) {
+				SP[i][J] = - LARGE;
+			}	
+			else if (CONS[I][J][1] == true) {
 				if(yplus_u[I][J] < 11.63)
 					SP[i][J]= -mu[I][J]*AREAs/(0.5*AREAw);
 				else
@@ -591,15 +597,6 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			           (mun        *dvdx[i][j+1] - mus        *dvdx[i][j]) / (y_v[j+1] - y_v[j]) -
                        2./3. * (rho[I][J]*k[I][J] - rho[I-1][J]*k[I-1][J])/(x[I] - x[I-1]);
 			Su[I][j] *= AREAw*AREAs;
-			
-			//################BEGIN SELF ADDED CODE################//
-			// USE TEXTFILE DATA TO SET VELOCITY!
-
-			if (CONS[i][J][0] == true) {
-				SP[i][J] = - LARGE;
-			}			
-
-			//#################END SELF ADDED CODE#################//
 			
 			/* The coefficients (hybrid differencing sheme) */
 
@@ -703,7 +700,10 @@ void vcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 
 			//################BEGIN SELF ADDED CODE################//
 			// Calculate sourceterm in v-direction:
-			if (CONS[I][J][2] == true) {
+			if (CONS[I][J][0] == true) {
+				SP[I][j] = -LARGE;
+			}
+			else if (CONS[I][J][2] == true) {
 				if(yplus_v[I][J] < 11.63)
 					SP[i][J]  = -mu[I][J]*AREAw/(0.5*AREAs);
 				else
@@ -719,14 +719,6 @@ void vcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
                        2./3. * (rho[I][J]*k[I][J] - rho[I][J-1]*k[I][J-1])/(y[J] - y[J-1]); 
 
 			Su[I][j] *= AREAw*AREAs;
-			
-			//################BEGIN SELF ADDED CODE################//
-			// USE TEXTFILE DATA TO SET VELOCITY!
-
-			if (CONS[I][J][0] == true) {
-				SP[I][j] = - LARGE;
-			}
-			//#################END SELF ADDED CODE#################//
 
 			/* The coefficients (hybrid differencing scheme) */
 			
@@ -950,59 +942,58 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			Ds = Gamma[I  ][J-1]*Gamma[I  ][J  ]/(Gamma[I  ][J-1]*(y[J  ] - y_v[j  ]) + Gamma[I  ][J  ]*(y_v[j  ] - y[J-1]))*AREAs;
 			Dn = Gamma[I  ][J  ]*Gamma[I  ][J+1]/(Gamma[I  ][J  ]*(y[J+1] - y_v[j+1]) + Gamma[I  ][J+1]*(y_v[j+1] - y[J  ]))*AREAn;
 
-			// Calculate sourceterm for heated object/wall, page 278:
-//			if (CONS[I][J][0]*CONS[I][J][3] == true) {	/* On a wall, fix temperature */
-//				SP[I][J] = - LARGE;
-//				Su[I][J] = LARGE*TEMP;
-//			}
-//			if (CONS[I][J][1]*CONS[I][J][3] == true) {
-//				if(yplus_u[I][J] < 11.63) 	/* laminar flow, eq. 9.13 */
-//					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAs/(0.5*AREAw);
-//				else 						/* Turbulent flow, eq. 9.24 */
-//					SP[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) * Cp[I][J] / Tplus_u[I][J] * AREAs;
-//				/* Source term Su */
-//				Su[I][J] = -SP[I][J]*TEMP;
-//			}
-//			// Calculate sourceterm in v-direction:
-//			else if (CONS[I][J][2]*CONS[I][J][3] == true) {
-//				if(yplus_v[I][J] < 11.63) 	/* laminar flow, eq. 9.13 */
-//					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAw/(0.5*AREAs);
-//				else 						/* Turbulent flow, eq. 9.24 */
-//					SP[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) *Cp[I][J] / Tplus_v[I][J] * AREAw;
-//				/* Source term Su */
-//				Su[I][J] = -SP[I][J]*TEMP;
-//			}	
-//			else {	/* for adiabatic walls, or places without wall*/
-//				SP[i][J] = 0.;
-//				Su[I][J] = 0.;
-//			}
-//			
-//			/* The coefficients (hybrid differencing scheme) */
-//			
-//			/* aS, check current position and for wall to the south (J-1) */
-//			if (CONS[I][J][1]*CONS[I][J-1][0]*CONS[I][J][3] == true) aS[I][J] = 0.;
-//			else      aS[I][J] = max3( Fs, Ds + 0.5*Fs, 0.);
-//            
-//			/* aN, check current position and for wall to the north (J+1) */
-//			if (CONS[I][J][1]*CONS[I][J+1][0]*CONS[I][J][3] == true) aN[I][J] = 0.;
-//			else      aN[I][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
-//			
-//			/* aW, check current position and for wall to the west (I-1) */
-//			if (CONS[I][J][2]*CONS[I-1][J][0]*CONS[I][J][3] == true) aW[I][J] = 0.;
-//			else      aW[I][J] = max3( Fw, Dw + 0.5*Fw, 0.);
-//			
-//			/* aE, check current position and for wall to the east (I+1) */
-//			if (CONS[I][J][2]*CONS[I+1][J][0]*CONS[I][J][3] == true) aE[I][J] = 0.;
-//			else      aE[I][J] = max3(-Fe, De - 0.5*Fe, 0.);
+			/* The source terms, page 278 */
+			// Calculate sourceterm of T:
+			if (CONS[I][J][0]*CONS[I][J][3]) {	/* On a wall, fix temperature */
+				SP[I][J] = - LARGE;
+				Su[I][J] = LARGE*TEMP;
+			}
+			else if (CONS[I][J][1]*CONS[I][J][3]) {
+				if(yplus_u[I][J] < 11.63) 	/* laminar flow, eq. 9.13 */
+					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAs/(0.5*AREAw);
+				else 						/* Turbulent flow, eq. 9.24 */
+					SP[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) * Cp[I][J] / Tplus_u[I][J] * AREAs;
+				/* Source term Su */
+				Su[I][J] = -SP[I][J]*TEMP;
+			}
+			// Calculate sourceterm in v-direction:
+			else if (CONS[I][J][2]*CONS[I][J][3]) {
+				if(yplus_v[I][J] < 11.63) 	/* laminar flow, eq. 9.13 */
+					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAw/(0.5*AREAs);
+				else 						/* Turbulent flow, eq. 9.24 */
+					SP[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) *Cp[I][J] / Tplus_v[I][J] * AREAw;
+				/* Source term Su */
+				Su[I][J] = -SP[I][J]*TEMP;
+			}	
+			else {	/* for adiabatic walls, or places without wall*/
+				SP[i][J] = 0.;
+				Su[I][J] = 0.;
+			}
+			
+			/* The coefficients (hybrid differencing scheme) */
+			
+			/* aS, check current position and for wall to the south (J-1) */
+			if (CONS[I][J][1]*CONS[I][J-1][0]*CONS[I][J][3] == true) aS[I][J] = 0.;
+			else      aS[I][J] = max3( Fs, Ds + 0.5*Fs, 0.);
+            
+			/* aN, check current position and for wall to the north (J+1) */
+			if (CONS[I][J][1]*CONS[I][J+1][0]*CONS[I][J][3] == true) aN[I][J] = 0.;
+			else      aN[I][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
+			
+			/* aW, check current position and for wall to the west (I-1) */
+			if (CONS[I][J][2]*CONS[I-1][J][0]*CONS[I][J][3] == true) aW[I][J] = 0.;
+			else      aW[I][J] = max3( Fw, Dw + 0.5*Fw, 0.);
+			
+			/* aE, check current position and for wall to the east (I+1) */
+			if (CONS[I][J][2]*CONS[I+1][J][0]*CONS[I][J][3] == true) aE[I][J] = 0.;
+			else      aE[I][J] = max3(-Fe, De - 0.5*Fe, 0.);
 
 			//////////////OLD/////////////////
 			
-			/* The source terms, page 278 */
-			
-			SP[I][J] = 0.;	// PIM: for adiabatic walls
-			Su[I][J] = 0.;  // PIM: for adiabatic walls
+			SP[I][J] = 0.;
+			Su[I][J] = 0.;
 
-			if (CONS[I][J][0]*CONS[I][J][3] == true) {	/* On a wall, fix temperature */
+			if (CONS[I][J][0]*CONS[I][J][3]) {	/* On a wall, fix temperature */
 				SP[I][J] = - LARGE;
 				Su[I][J] = LARGE*TEMP;
 			}
@@ -1013,11 +1004,8 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			aE[I][J] = max3(-Fe, De - 0.5*Fe, 0.);
 			aS[I][J] = max3( Fs, Ds + 0.5*Fs, 0.);
 			aN[I][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
-			
-			
+
 			//////////////OLD////////////////
-
-
 
 			aPold    = rho[I][J]*AREAe*AREAn/Dt;
 
@@ -1676,6 +1664,7 @@ void readInput (char *name)
 	fscanf( fp, "%*s %lf", &relax_u );
 	fscanf( fp, "%*s %lf", &relax_T );
 	fscanf( fp, "%*s %lf", &Dt );
+	fscanf( fp, "%*s %lf", &TOTAL_TIME );
 	fscanf( fp, "%*s %d", &MAX_ITER );
 	fscanf( fp, "%*s %d", &U_ITER );
 	fscanf( fp, "%*s %d", &V_ITER );
@@ -1715,10 +1704,6 @@ void readInput (char *name)
 		CONS[I][J][0] = true;
 		/* temperature constrain in 3 */
 		CONS[I][J][3] = ad;
-		
-		printf("CONS[I][J][0] =  %4d ",CONS[I][J][0]);
-		printf("CONS[I][J][3] =  %4d ",CONS[I][J][3]);
-		printf("\n");
 	}
 
 	// Print results
@@ -1735,10 +1720,6 @@ void readInput (char *name)
 		CONS[I][J][1] = true;
 		/* temperature constrain in 3 */
 		CONS[I][J][3] = ad;
-		
-		printf("CONS[I][J][1] =  %4d ",CONS[I][J][1]);
-		printf("CONS[I][J][3] =  %4d ",CONS[I][J][3]);
-		printf("\n");
 	}
 
 	// Print results
@@ -1755,10 +1736,6 @@ void readInput (char *name)
 		CONS[I][J][2] = true;
 		/* temperature constrain in 3 */
 		CONS[I][J][3] = ad;
-		
-		printf("CONS[I][J][2] =  %4d ",CONS[I][J][2]);
-		printf("CONS[I][J][3] =  %4d ",CONS[I][J][3]);
-		printf("\n");
 	}
 
 	// Print results

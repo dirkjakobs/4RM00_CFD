@@ -33,6 +33,7 @@ double *x_u;             /* x coordinate on u-velocity points [m] */
 double *y;               /* y coordinate on pressure points [m] */
 double *y_v;             /* y coordinate on v-velocity points [m] */
 double Dt;
+double TOTAL_TIME;
 
 double **u;
 double **v;
