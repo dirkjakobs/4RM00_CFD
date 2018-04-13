@@ -53,9 +53,9 @@ set multiplot layout 2,1 rowsfirst
 #set label 1 'ugrid' at graph 0.0,0.0,0.0 font ',16'
 
 
-#splot 'output.dat' using 1:2:3 with pm3d # --- GRAPH: ugrid
+splot 'output.dat' using 1:2:3 with pm3d # --- GRAPH: ugrid
 
-#splot 'output.dat' using 1:2:4 with pm3d # --- GRAPH: vgrid
+splot 'output.dat' using 1:2:4 with pm3d # --- GRAPH: vgrid
 
 #splot 'output.dat' using 1:2:5 with pm3d # --- GRAPH: p
 
@@ -67,9 +67,9 @@ set multiplot layout 2,1 rowsfirst
 
 #splot 'output.dat' using 1:2:9 with pm3d # --- GRAPH: Gamma
 
-splot 'output.dat' using 1:2:10 with pm3d # --- GRAPH: k
+#splot 'output.dat' using 1:2:10 with pm3d # --- GRAPH: k
 
-splot 'output.dat' using 1:2:11 with pm3d # --- GRAPH: eps
+#splot 'output.dat' using 1:2:11 with pm3d # --- GRAPH: eps
 
 #splot 'output.dat' using 1:2:12 with pm3d # --- GRAPH: Tplus_u
 
