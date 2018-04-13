@@ -178,7 +178,7 @@ void init(void)
 			u      [i][J] = U_IN;						/* Guess velocity profile in x-direction */
 			v      [I][j] = 0.;       					/* Velocity in y-direction */
 			p      [I][J] = 0.;       					/* Relative pressure */
-			T      [I][J] = TZERO;     					/* Temperature, obtained from text file*/ 
+			T      [I][J] = TZERO;   					/* Temperature, obtained from text file*/ 
 			k      [I][J] = 1e-3;     					/* k */
 			eps    [I][J] = 1e-4;     					/* epsilon */
 //			uplus  [I][J] = 1.;                         /* uplus */
@@ -580,7 +580,10 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 				
 			//################BEGIN SELF ADDED CODE################//
 			// Calculate sourceterm in u-direction:
-			if (CONS[I][J][1] == true) {
+			if (CONS[i][J][0] == true) {
+				SP[i][J] = - LARGE;
+			}	
+			else if (CONS[I][J][1] == true) {
 				if(yplus_u[I][J] < 11.63)
 					SP[i][J]= -mu[I][J]*AREAs/(0.5*AREAw);
 				else
@@ -594,15 +597,6 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			           (mun        *dvdx[i][j+1] - mus        *dvdx[i][j]) / (y_v[j+1] - y_v[j]) -
                        2./3. * (rho[I][J]*k[I][J] - rho[I-1][J]*k[I-1][J])/(x[I] - x[I-1]);
 			Su[I][j] *= AREAw*AREAs;
-			
-			//################BEGIN SELF ADDED CODE################//
-			// USE TEXTFILE DATA TO SET VELOCITY!
-
-			if (CONS[i][J][0] == true) {
-				SP[i][J] = - LARGE;
-			}			
-
-			//#################END SELF ADDED CODE#################//
 			
 			/* The coefficients (hybrid differencing sheme) */
 
@@ -732,7 +726,7 @@ void vcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			if (CONS[I][J][2] == true && CONS[I-1][J][0] == true) aW[I][j]=0.;
 			else      aW[I][j] = max3( Fw, Dw + 0.5*Fw, 0.);
             
-			/* aW, check current position and for wall to the east (I+1) */
+			/* aE, check current position and for wall to the east (I+1) */
 			if (CONS[I][J][2] == true && CONS[I+1][J][0] == true) aE[I][j]=0.;
 			else      aE[I][j] = max3(-Fe, De - 0.5*Fe, 0.);
 
@@ -949,7 +943,6 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			Dn = Gamma[I  ][J  ]*Gamma[I  ][J+1]/(Gamma[I  ][J  ]*(y[J+1] - y_v[j+1]) + Gamma[I  ][J+1]*(y_v[j+1] - y[J  ]))*AREAn;
 
 			/* The source terms, page 278 */
-
 			// Calculate sourceterm of T:
 			if (CONS[I][J][0]*CONS[I][J][3]) {	/* On a wall, fix temperature */
 				SP[I][J] = - LARGE;
@@ -994,10 +987,9 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			/* aE, check current position and for wall to the east (I+1) */
 			if (CONS[I][J][2]*CONS[I+1][J][0]*CONS[I][J][3] == true) aE[I][J] = 0.;
 			else      aE[I][J] = max3(-Fe, De - 0.5*Fe, 0.);
+
+			//////////////OLD/////////////////
 			
-			
-			
-			// ORIGIANL
 			SP[I][J] = 0.;
 			Su[I][J] = 0.;
 
@@ -1013,7 +1005,7 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			aS[I][J] = max3( Fs, Ds + 0.5*Fs, 0.);
 			aN[I][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
 
-
+			//////////////OLD////////////////
 
 			aPold    = rho[I][J]*AREAe*AREAn/Dt;
 
@@ -1093,9 +1085,14 @@ void epscoeff(double **aE, double **aW, double **aN, double **aS, double **aP, d
 
 			/* The source terms */
 			//################BEGIN SELF ADDED CODE################//
-
+			
+			// Set sourceterm to zero on walls or objects:
+			if (CONS[I][J][0] == true) {
+				Su[I][J]  = 0;
+				SP[I][J]  = 0;			
+			}
 			// Calculate sourceterm in u-direction:
-			if (CONS[I][J][1] == true) {
+			else if (CONS[I][J][1] == true) {
 				SP[I][J] = -LARGE;
 				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*0.5*AREAw)*LARGE;
 			}
@@ -1103,6 +1100,11 @@ void epscoeff(double **aE, double **aW, double **aN, double **aS, double **aP, d
 			else if (CONS[I][J][2] == true) {
 				SP[I][J] = -LARGE;
 				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*0.5*AREAe)*LARGE;
+			}
+			// CHECK!!! Dubbel blokje: Epsilon gebruikt de afstand tot de wand. Je kan hiervoor de lengte van de vector (deltax, deltay) gebruiken.
+			else if (CONS[I][J][1]*CONS[I][J][2] == true) { 
+				SP[I][J] = -LARGE; 
+				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*mag(0.5*AREAw,0.5*AREAe))*LARGE; 
 			}
 			else {
 				Su[I][J] = C1eps * eps[I][J] / k[I][J] * 2. * mut[I][J] * E2[I][J];
@@ -1198,8 +1200,14 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			//################BEGIN SELF ADDED CODE################//
 			
 			/* The source terms */
+			
+			// Set sourceterm to zero on walls or objects:
+			if (CONS[I][J][0] == true) {
+				Su[I][J]  = 0;
+				SP[I][J]  = 0;			
+			}
 			/* Check if one of the source terms is valid */
-			if (CONS[I][J][1] == true || CONS[I][J][2] == true) {
+			else if (CONS[I][J][1] == true || CONS[I][J][2] == true) {
 
 				// Calculate sourceterm in u-direction:
 				if (CONS[I][J][1] == true) {
@@ -1217,7 +1225,7 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 					Su[I][J] = Su_v[I][J];
 				}
 				
-				/* Calculate magnitude of source terms if both valid*/
+				// Calculate magnitude of source terms if both valid: k gaat uit van de wall shear stress. Je zou deze kunnen schrijven als de lengte van de vector (du/dy, dv/dx).
 				if (CONS[I][J][1]*CONS[I][J][2] == true) {
 					SP[I][J] = mag(SP_u[I][J], SP_v[I][J]);
 					Su[I][J] = mag(Su_u[I][J], Su_v[I][J]);
@@ -1420,7 +1428,7 @@ void output(void)
 
 			//################BEGIN SELF ADDED CODE################//
 			fprintf(fp, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
-			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], uplus[I][J], yplus[I][J], yplus_u[I][J], yplus_v[I][J], uplus_u[I][J], uplus_v[I][J]);
+			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], Tplus_u[I][J], Tplus_v[I][J], yplus_u[I][J], yplus_v[I][J], uplus_u[I][J], uplus_v[I][J]);
 //			             1     2     3      4      5        6        7          8         9            10       11         12           13           14            15              16             17
 			//#################END SELF ADDED CODE#################//  
 		} /* for J */
