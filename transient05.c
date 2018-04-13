@@ -1097,9 +1097,14 @@ void epscoeff(double **aE, double **aW, double **aN, double **aS, double **aP, d
 
 			/* The source terms */
 			//################BEGIN SELF ADDED CODE################//
-
+			
+			// Set sourceterm to zero on walls or objects:
+			if (CONS[I][J][0] == true) {
+				Su[I][J]  = 0;
+				SP[I][J]  = 0;			
+			}
 			// Calculate sourceterm in u-direction:
-			if (CONS[I][J][1] == true) {
+			else if (CONS[I][J][1] == true) {
 				SP[I][J] = -LARGE;
 				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*0.5*AREAw)*LARGE;
 			}
@@ -1108,6 +1113,7 @@ void epscoeff(double **aE, double **aW, double **aN, double **aS, double **aP, d
 				SP[I][J] = -LARGE;
 				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*0.5*AREAe)*LARGE;
 			}
+			// CHECK!!! Dubbel blokje: Epsilon gebruikt de afstand tot de wand. Je kan hiervoor de lengte van de vector (deltax, deltay) gebruiken.
 			else if (CONS[I][J][1]*CONS[I][J][2] == true) { 
 				SP[I][J] = -LARGE; 
 				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*mag(0.5*AREAw,0.5*AREAe))*LARGE; 
@@ -1206,11 +1212,13 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			//################BEGIN SELF ADDED CODE################//
 			
 			/* The source terms */
-			/* Check if one of the source terms is valid */
+			
+			// Set sourceterm to zero on walls or objects:
 			if (CONS[I][J][0] == true) {
 				Su[I][J]  = 0;
 				SP[I][J]  = 0;			
 			}
+			/* Check if one of the source terms is valid */
 			else if (CONS[I][J][1] == true || CONS[I][J][2] == true) {
 
 				// Calculate sourceterm in u-direction:
@@ -1229,7 +1237,7 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 					Su[I][J] = Su_v[I][J];
 				}
 				
-				/* Calculate magnitude of source terms if both valid*/
+				// Calculate magnitude of source terms if both valid: k gaat uit van de wall shear stress. Je zou deze kunnen schrijven als de lengte van de vector (du/dy, dv/dx).
 				if (CONS[I][J][1]*CONS[I][J][2] == true) {
 					SP[I][J] = mag(SP_u[I][J], SP_v[I][J]);
 					Su[I][J] = mag(Su_u[I][J], Su_v[I][J]);
