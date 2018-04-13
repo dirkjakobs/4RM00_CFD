@@ -969,7 +969,10 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 				SP[i][J] = 0.;
 				Su[I][J] = 0.;
 			}
-			
+
+			Su[I][J] *= AREAw*AREAs;
+			SP[I][J] *= AREAw*AREAs;
+
 			/* The coefficients (hybrid differencing scheme) */
 			
 			/* aS, check current position and for wall to the south (J-1) */
