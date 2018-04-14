@@ -57,9 +57,9 @@ set multiplot layout 2,1 rowsfirst
 
 #splot 'output.dat' using 1:2:4 with pm3d # --- GRAPH: vgrid
 
-splot 'output.dat' using 1:2:5 with pm3d # --- GRAPH: p
+#splot 'output.dat' using 1:2:5 with pm3d # --- GRAPH: p
 
-splot 'output.dat' using 1:2:6 with pm3d # --- GRAPH: T
+#splot 'output.dat' using 1:2:6 with pm3d # --- GRAPH: T
 
 #splot 'output.dat' using 1:2:7 with pm3d # --- GRAPH: rho
 

@@ -23,14 +23,17 @@
 int main(int argc, char *argv[])
 /* ################################################################# */
 {
-	int    iter_u, iter_v, iter_pc, iter_T, iter_eps, iter_k;
+	int    iter_u, iter_v, iter_pc, iter_T, iter_eps, iter_k, Count;
 	double du, dv, time;
 	
 	readInput("constraints.dat");
 
 	init();
 	bound(); /* apply boundary conditions */
-
+	
+	Count = 0;
+//	animation(Count);
+	
 	for (time = Dt; time <= TOTAL_TIME; time += Dt) {
 		iter = 0; 
 		while (iter < MAX_ITER && SMAX > SMAXneeded && SAVG > SAVGneeded) { /* outer iteration loop */
@@ -80,6 +83,9 @@ int main(int argc, char *argv[])
 		/* reset SMAX and SAVG */
 		SMAX = LARGE;
 		SAVG = LARGE;
+	
+		Count=Count+1;
+//		animation(Count);
 		
 	} /* for Dt */
 	output();
@@ -150,7 +156,11 @@ void init(void)
 	
 	memalloc();
 	grid();
-
+	
+	// Initialize for animation
+	timestore = 1/Dt;
+	nloop = 0;
+	
 	/* Initialising all variables  */
 
 	omega = 1.0; /* Over-relaxation factor for SOR solver ( 1 < omega < 2 ) */
@@ -1757,4 +1767,44 @@ void readInput (char *name)
 	printf("\n");
 	
 } /* readinput */
+
+void animation(int time)
+{
+/***** Purpose: Creating result table ******/
+	int    I, J, i, j;
+	double count, ugrid, vgrid,stream,vorticity, Tavg;
+	
+	FILE   *f_p, *str, *velu, *velv, *vort;
+/* Plot all results in output.dat */
+	
+	if(timestore*Dt==1){
+	
+	char index[10];
+//    sprintf(index, "T%d_%d.dat", nloop, time);
+    sprintf(index, "T%d.dat", nloop);
+    
+	f_p = fopen(index, "w");
+	
+	count = 1.;
+	
+	for (I = 0; I <= NPI; I++) {
+		i = I;
+		for (J = 1; J <= NPJ; J++) {
+			j = J;
+			ugrid = 0.5*(u[i][J]+u[i+1][J  ]); /* interpolated horizontal velocity */
+			vgrid = 0.5*(v[I][j]+v[I  ][j+1]); /* interpolated vertical velocity */
+			
+			fprintf(f_p, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
+			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], Tplus_u[I][J], Tplus_v[I][J], yplus_u[I][J], yplus_v[I][J], uplus_u[I][J], uplus_v[I][J]);
+//			             1     2     3      4      5        6        7          8         9            10       11         12           13           14            15              16             17
+		} /* for J */
+		fprintf(f_p, "\n");
+	} /* for I */
+
+	fclose(f_p);
+	timestore=0;
+	nloop+=1;
+	}
+timestore+=1;
+}
 

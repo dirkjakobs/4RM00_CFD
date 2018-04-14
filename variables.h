@@ -123,6 +123,8 @@ double **lambda;
 double **p_abs;
 double **Gamma_L;
 double **Gamma_T;
+int    timestore;
+int	   nloop;
 
 
 

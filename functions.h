@@ -48,5 +48,5 @@ extern void free_double_2D_matrix (double **m, int nm);
 
 // SELF ADDED FUNCTIONS
 extern void calc_uplus(void);
-extern void animation(double time);
+extern void animation(int time);
 extern void properties(void);
