@@ -8,7 +8,7 @@ set view 0,0,2
 
 set terminal png size 1024,768 crop enhanced
 
-do for [i=0:5]{
+do for [i=0:9]{
 
 output_file = sprintf('T_%d_animation.png',i)
 

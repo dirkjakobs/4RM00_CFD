@@ -126,6 +126,10 @@ double **Gamma_T;
 int    timestore;
 int	   nloop;
 
+// TEST
+double **Pee_u;
+double **Pee_v;
+
 
 
 

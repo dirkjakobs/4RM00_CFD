@@ -5,7 +5,7 @@ reset session
 set title "Hele mooie output" 
 
 #Set view { <rot_x>{,{<rot_z>}{,{<scale>}{,<scale_z>}}} | map }
-set view 180, 0, 2, 1
+set view 0, 0, 2, 1
 
 #Hide grid lines:
 set hidden3d
@@ -14,13 +14,13 @@ set hidden3d
 set style data lines
 
 #Contour lines:
-set contour
+#set contour
  # Position legend countours
- set key outside right bottom        # {left | right | center} {top | bottom | center}
+ #set key outside right bottom        # {left | right | center} {top | bottom | center}
 
 
 #Range of axis:
-#set xrange [ 0.0 : 1.0 ] noreverse nowriteback
+set xrange [ 0.0 : 1.0 ] noreverse nowriteback
 set yrange [ 0 : 0.2 ] noreverse nowriteback
 #set zrange [ -2.0 : 5.0 ] noreverse nowriteback
 
@@ -48,12 +48,12 @@ scale = 0.01
 #show bind
 
 ### Start multiplot 
-set multiplot layout 2,1 rowsfirst
+set multiplot layout 1,1 rowsfirst
 
 #set label 1 'ugrid' at graph 0.0,0.0,0.0 font ',16'
 
 
-#splot 'output.dat' using 1:2:3 with pm3d # --- GRAPH: ugrid
+splot 'output.dat' using 1:2:3 with pm3d # --- GRAPH: ugrid
 
 #splot 'output.dat' using 1:2:4 with pm3d # --- GRAPH: vgrid
 
@@ -82,6 +82,12 @@ set multiplot layout 2,1 rowsfirst
 #splot 'output.dat' using 1:2:16 with pm3d # --- GRAPH: uplus_u
 
 #splot 'output.dat' using 1:2:17 with pm3d # --- GRAPH: uplus_v
+
+#splot 'output.dat' using 1:2:18 with pm3d # --- GRAPH: Pee_u
+
+#splot 'output.dat' using 1:2:19 with pm3d # --- GRAPH: Pee_v
+
+
 
 #splot 'vort.dat' using 1:2:3 with pm3d # --- GRAPH: x[I], y[J], vorticity
 

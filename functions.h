@@ -47,6 +47,6 @@ extern double **double_2D_matrix(int nm, int np);
 extern void free_double_2D_matrix (double **m, int nm);
 
 // SELF ADDED FUNCTIONS
-extern void calc_uplus(void);
+extern void calc_wall_coeff(void);
 extern void animation(int time);
 extern void properties(void);

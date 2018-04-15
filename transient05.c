@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 	bound(); /* apply boundary conditions */
 	
 	Count = 0;
-//	animation(Count);
+	animation(Count);
 	
 	for (time = Dt; time <= TOTAL_TIME; time += Dt) {
 		iter = 0; 
@@ -66,12 +66,8 @@ int main(int argc, char *argv[])
 			for (iter_T = 0; iter_T < T_ITER; iter_T++)
 				solve(T, b, aE, aW, aN, aS, aP);
 
-//			viscosity(); // PIM: Moved to properties()
-
-			//################BEGIN SELF ADDED CODE################//	
-			properties(); // Including viscosity();
-			//#################END SELF ADDED CODE#################//
-			
+			properties(); 
+						
 			bound();
 			storeresults(); /* Store data at current time level in arrays for "old" data*/
 
@@ -85,7 +81,7 @@ int main(int argc, char *argv[])
 		SAVG = LARGE;
 	
 		Count=Count+1;
-//		animation(Count);
+		animation(Count);
 		
 	} /* for Dt */
 	output();
@@ -184,23 +180,18 @@ void init(void)
 		for (J = 0; J <= NPJ + 1; J++) {
 			j = J;
 //			u      [i][J] = U_IN*1.5*(1.-sqr(2.*(y[J]-YMAX/2.)/YMAX));     /* Guess velocity profile in x-direction */
-
 			u      [i][J] = U_IN;						/* Guess velocity profile in x-direction */
 			v      [I][j] = 0.;       					/* Velocity in y-direction */
 			p      [I][J] = 0.;       					/* Relative pressure */
 			T      [I][J] = TZERO;   					/* Temperature, obtained from text file*/ 
 			k      [I][J] = 1e-3;     					/* k */
 			eps    [I][J] = 1e-4;     					/* epsilon */
-//			uplus  [I][J] = 1.;                         /* uplus */
-//			yplus1 [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (y[1] - y[0]);   /* yplus1 */
-//			yplus2 [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (y[NPJ+1] - y[NPJ]);   /* yplus2 */
-//			yplus  [I][J] = 1.;                         /* yplus*/
 			tw     [I][J] = 5.;                         /* tw */
 			rho    [I][J] = rho_init;      				/* Density */
 			mu     [I][J] = mu_init;    				/* Viscosity */
 			Cp     [I][J] = Cp_init;     				/* J/(K*kg) Heat capacity - assumed constant for this problem */
-			Gamma  [I][J] = lambda_init/Cp[I][J];            /* Thermal conductivity divided by heat capacity - assumed laminair in initial state */
-			Prandtl[I][J] = mu[I][J]/Gamma[I][J]; 		/* laminar Prandtl number mu*Cp/K (eq. 3.50) */
+			Gamma  [I][J] = lambda_init/Cp[I][J];       /* Thermal conductivity divided by heat capacity - assumed laminair in initial state */
+			Prandtl[I][J] = mu[I][J]/Gamma[I][J]; 		/* laminar (or moleculair) Prandtl number mu*Cp/K (eq. 3.50) */
 			u_old  [i][J] = u[i][J];  					/* Velocity in x-direction old timestep */
 			v_old  [I][j] = v[I][j];  					/* Velocity in y-direction old timestep */
 			pc_old [I][J] = pc[I][J]; 					/* Pressure correction old timestep */
@@ -574,17 +565,6 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			mus = 0.25*(mueff[I][J] + mueff[I-1][J] + mueff[I][J-1] + mueff[I-1][J-1]);
 			mun = 0.25*(mueff[I][J] + mueff[I-1][J] + mueff[I][J+1] + mueff[I-1][J+1]);
 			
-			// Calculate sourceterms for horizontal walls:
-			//if(J == 1){// || J==NPJ) {
-//
-//				if(yplus[I][J] < 11.63)
-//					SP[i][J]= -mu[I][J]*AREAs/(0.5*AREAw);
-//				else
-//					SP[i][J]=-rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus[I][J] * AREAs;
-//			}
-//			else
-//				SP[i][J] = 0.;	
-				
 			//################BEGIN SELF ADDED CODE################//
 			// Calculate sourceterm in u-direction:
 			if (CONS[i][J][0] == true) {
@@ -917,6 +897,12 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 	Jend   = NPJ;
 
 	conv();
+	
+	//################BEGIN SELF ADDED CODE################//
+    properties(); 
+	calc_wall_coeff();
+
+	//#################END SELF ADDED CODE#################//
 
 	for (I = Istart; I <= Iend; I++) {
 		i = I;
@@ -949,26 +935,49 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			Ds = Gamma[I  ][J-1]*Gamma[I  ][J  ]/(Gamma[I  ][J-1]*(y[J  ] - y_v[j  ]) + Gamma[I  ][J  ]*(y_v[j  ] - y[J-1]))*AREAs;
 			Dn = Gamma[I  ][J  ]*Gamma[I  ][J+1]/(Gamma[I  ][J  ]*(y[J+1] - y_v[j+1]) + Gamma[I  ][J+1]*(y_v[j+1] - y[J  ]))*AREAn;
 
+			/* The coefficients (hybrid differencing scheme) */
+			aW[I][J] = max3( Fw, Dw + 0.5*Fw, 0.);
+			aE[I][J] = max3(-Fe, De - 0.5*Fe, 0.);
+			aS[I][J] = max3( Fs, Ds + 0.5*Fs, 0.);
+			aN[I][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
+
+			// Set source terms to zero (only needed if you don't use wall functions)
+			SP[i][J] = 0.;
+			Su[I][J] = 0.;
+
 			/* The source terms, page 278 */
 			// Calculate sourceterm of T:
-			if (CONS[I][J][0]*CONS[I][J][3]) {	/* On a wall, fix temperature */
+			if (CONS[I][J][0]*CONS[I][J][3] == true) {	/* On a wall, fix temperature */
 				SP[I][J] = - LARGE;
 				Su[I][J] = LARGE*TEMP;
 			}
-			else if (CONS[I][J][1]*CONS[I][J][3]) {
-				if(yplus_u[I][J] < 11.63) 	/* laminar flow, eq. 9.13 */
-					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAs/(0.5*AREAw);
-				else 						/* Turbulent flow, eq. 9.24 */
-					SP[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) * Cp[I][J] / Tplus_u[I][J] * AREAs;
+			else if (CONS[I][J][1]*CONS[I][J][3] == true) {
+				if(yplus_u[I][J] < 11.63) {	/* laminar flow, eq. 9.13 */
+					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAs/(0.5*AREAw); // unit [J/(sK)]
+            	}
+				else {						/* Turbulent flow, eq. 9.24 */
+					SP[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J])* Cp[I][J] * AREAs / Tplus_u[I][J]; // unit [J/(sK)]
+
+					/* Coefficient aS, check current position and for wall to the south (J-1) */
+					if      (CONS[I][J-1][0] == true) aS[I][J] = 0.;
+					/* Coefficient aN, check current position and for wall to the north (J+1) */
+					else if (CONS[I][J+1][0] == true) aN[I][J] = 0.;  
+				}
 				/* Source term Su */
 				Su[I][J] = -SP[I][J]*TEMP;
 			}
 			// Calculate sourceterm in v-direction:
-			else if (CONS[I][J][2]*CONS[I][J][3]) {
+			else if (CONS[I][J][2]*CONS[I][J][3] == true) {
 				if(yplus_v[I][J] < 11.63) 	/* laminar flow, eq. 9.13 */
-					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAw/(0.5*AREAs);
-				else 						/* Turbulent flow, eq. 9.24 */
-					SP[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) *Cp[I][J] / Tplus_v[I][J] * AREAw;
+					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAw/(0.5*AREAs); // unit [J/(sK)]
+				else {						/* Turbulent flow, eq. 9.24 */
+					SP[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) *Cp[I][J] / Tplus_v[I][J] * AREAw; // unit [J/(sK)]
+
+					/* Coefficient aW, check current position and for wall to the west (I-1) */
+					if      (CONS[I-1][J][0] == true) aW[I][J] = 0.;
+					/* Coefficient aE, check current position and for wall to the east (I+1) */
+					else if (CONS[I+1][J][0] == true) aE[I][J] = 0.;
+				}
 				/* Source term Su */
 				Su[I][J] = -SP[I][J]*TEMP;
 			}	
@@ -976,46 +985,10 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 				SP[i][J] = 0.;
 				Su[I][J] = 0.;
 			}
-
+			
+			// Multiply by cell volume
 			Su[I][J] *= AREAw*AREAs;
 			SP[I][J] *= AREAw*AREAs;
-
-			/* The coefficients (hybrid differencing scheme) */
-			
-			/* aS, check current position and for wall to the south (J-1) */
-			if (CONS[I][J][1]*CONS[I][J-1][0]*CONS[I][J][3] == true) aS[I][J] = 0.;
-			else      aS[I][J] = max3( Fs, Ds + 0.5*Fs, 0.);
-            
-			/* aN, check current position and for wall to the north (J+1) */
-			if (CONS[I][J][1]*CONS[I][J+1][0]*CONS[I][J][3] == true) aN[I][J] = 0.;
-			else      aN[I][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
-			
-			/* aW, check current position and for wall to the west (I-1) */
-			if (CONS[I][J][2]*CONS[I-1][J][0]*CONS[I][J][3] == true) aW[I][J] = 0.;
-			else      aW[I][J] = max3( Fw, Dw + 0.5*Fw, 0.);
-			
-			/* aE, check current position and for wall to the east (I+1) */
-			if (CONS[I][J][2]*CONS[I+1][J][0]*CONS[I][J][3] == true) aE[I][J] = 0.;
-			else      aE[I][J] = max3(-Fe, De - 0.5*Fe, 0.);
-
-			//////////////OLD/////////////////
-			
-			SP[I][J] = 0.;
-			Su[I][J] = 0.;
-
-			if (CONS[I][J][0]*CONS[I][J][3]) {	/* On a wall, fix temperature */
-				SP[I][J] = - LARGE;
-				Su[I][J] = LARGE*TEMP;
-			}
-
-			/* The coefficients (hybrid differencing scheme) */
-
-			aW[I][J] = max3( Fw, Dw + 0.5*Fw, 0.);
-			aE[I][J] = max3(-Fe, De - 0.5*Fe, 0.);
-			aS[I][J] = max3( Fs, Ds + 0.5*Fs, 0.);
-			aN[I][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
-
-			//////////////OLD////////////////
 
 			aPold    = rho[I][J]*AREAe*AREAn/Dt;
 
@@ -1059,8 +1032,7 @@ void epscoeff(double **aE, double **aW, double **aN, double **aS, double **aP, d
 	Jend   = NPJ;
 
 	conv();
-//    viscosity();
-    properties(); // Including viscosity();
+    properties(); 
     
 	for (I = Istart; I <= Iend; I++) {
 		i = I;
@@ -1172,7 +1144,7 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 	//################BEGIN SELF ADDED CODE################//
     properties(); // Including viscosity();	
     
-	calc_uplus(); // PIM: With wall functions, for CONS
+	calc_wall_coeff(); // PIM: With wall functions, for CONS
 
 	//#################END SELF ADDED CODE#################//
     
@@ -1288,7 +1260,7 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 } /*kcoeff*/
 
 /* ################################################################# */
-void calc_uplus(void)
+void calc_wall_coeff(void)
 /* ################################################################# */
 {
 /***** Purpose: Calculate uplus, yplus and tw  ******/
@@ -1297,7 +1269,6 @@ void calc_uplus(void)
 	int    i, j, I, J;
 	double Dx, Dy;
 	
-//	viscosity();
 	properties(); // Including viscosity();
 	
 	// PIM: Make Dx and Dy global!
@@ -1323,15 +1294,17 @@ void calc_uplus(void)
                   	yplus_u [I][J] = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dy) / mu[I][J];
                   	uplus_u [I][J] = log(ERough*yplus_u[I][J])/kappa;
 					Tplus_u [I][J] = turb_Prandtl*(uplus_u[I][J] + Pee(turb_Prandtl, Prandtl[I][J])); /* Turbulet T+, eq. 3.50 */
-                  	
+					
+					// Test Pee_u (never used)
+                  	Pee_u   [I][J] = Pee(turb_Prandtl, Prandtl[I][J]);
             	}/* else */
 	        } /* if */
 	        
 	        // Calculate: yplus_v
 	        if (CONS[I][J][2] == true) {
 				        
-	        	if (yplus_v[I][J] < 11.63) { // PIM: Initialise yplus_v instead of yplus1!
-                	tw[I][J]       = mu[I][J] * 0.5 * (v[I][j]+v[I][j+1]) / (0.5*Dx); // PIM: in general holds: 0.5*Dy = y[1] -y[0]
+	        	if (yplus_v[I][J] < 11.63) { 
+                	tw[I][J]       = mu[I][J] * 0.5 * (v[I][j]+v[I][j+1]) / (0.5*Dx); 
                   	yplus_v[I][J]  = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dx) / mu[I][J];
                   	uplus_v[I][J]  = yplus_v[I][J];
                   	
@@ -1342,6 +1315,8 @@ void calc_uplus(void)
                   	uplus_v [I][J] = log(ERough*yplus_v[I][J])/kappa;
 					Tplus_v [I][J] = turb_Prandtl*(uplus_v[I][J] + Pee(turb_Prandtl, Prandtl[I][J])); /* Turbulet T+, eq. 3.50 */
                   	
+                  	// Test Pee_v (never used)
+                  	Pee_v   [I][J] = Pee(turb_Prandtl, Prandtl[I][J]);
             	}/* else */
 	        } /* if */
 			
@@ -1357,21 +1332,6 @@ void calc_uplus(void)
 
 //#################END SELF ADDED CODE#################//
 
-///* ################################################################# */
-//void viscosity(void)
-///* ################################################################# */
-//{
-///***** Purpose: Calculate the viscosity in the fluid as a function of temperature *****/
-//	int   I, J;
-//
-//	for (I = 0; I <= NPI; I++)
-//		for (J = 1; J <= NPJ + 1; J++) {
-//            mut[I][J] = rho[I][J]*Cmu*sqr(k[I][J])/(eps[I][J]+SMALL);
-//			mueff[I][J] = mu[I][J] + mut[I][J];
-//      } /* for */
-//
-//} /* viscosity */
-
 //################BEGIN SELF ADDED CODE################//
 
 /* ################################################################# */
@@ -1381,7 +1341,7 @@ void properties(void)
 /***** Purpose: Calculate the properties in the fluid as a function of temperature *****/
 	int   I, J;
 
-	for (I = 0; I <= NPI; I++) // PIM: why not NPI+1?
+	for (I = 0; I <= NPI; I++) { // PIM: why not NPI+1?
 		for (J = 1; J <= NPJ + 1; J++) { // PIM: why not J=0?
 			// Calculate the density of air as function of pressure and temperature (does not converge)		
 //			p_abs  [I][J] = P_ATM + p[I][J]; /* Absolute pressure [Pa]*/
@@ -1389,9 +1349,9 @@ void properties(void)
 //			rho    [I][J] = 28.964*P_ATM/T[I][J]/GAS_CONS;      /* Density, temperature and constant pressure */
 			
 			// Calculate properties of air as function of temperature
-			mu     [I][J] = 352.975/T[I][J]*0.000001*(0.0264*pow(((T[I][J]-273.15)+50),1.24)+10);    /* Viscosity */
-			Cp     [I][J] = 1031.311-0.2028999*T[I][J]+0.0004005271*T[I][J]*T[I][J];     /* J/(K*kg) Heat capacity - assumed constant for this problem */
-			lambda [I][J] = 0.005+T[I][J]/13944;     /* W/(K*m) Thermal conductivity */
+//			mu     [I][J] = 352.975/T[I][J]*0.000001*(0.0264*pow(((T[I][J]-273.15)+50),1.24)+10);    /* Viscosity */
+//			Cp     [I][J] = 1031.311-0.2028999*T[I][J]+0.0004005271*T[I][J]*T[I][J];     /* J/(K*kg) Heat capacity - assumed constant for this problem */
+//			lambda [I][J] = 0.005+T[I][J]/13944;     /* W/(K*m) Thermal conductivity */
 
 			// Calculate the viscosity in the fluid as a function of temperature
             mut[I][J] = rho[I][J]*Cmu*sqr(k[I][J])/(eps[I][J]+SMALL);
@@ -1401,8 +1361,11 @@ void properties(void)
 			Gamma_L[I][J] = lambda[I][J]/Cp[I][J]; 			/* Thermal conductivity divided by heat capacity for laminar case*/
 			Gamma_T[I][J] = mut[I][J]/turb_Prandtl;			/* Thermal conductivity divided by heat capacity for turbulent case*/
 			Gamma  [I][J] = Gamma_L[I][J]+Gamma_T[I][J];	/* Thermal conductivity divided by heat capacity (effective)*/
-      } /* for */
-
+			
+			// Calculate laminair (or moleculair) Prandtl Number
+			Prandtl[I][J] = mu[I][J]/Gamma_L[I][J];
+        } /* for */
+    }
 } /* properties */
 
 //#################END SELF ADDED CODE#################// 
@@ -1412,18 +1375,11 @@ void printConv(double time, int iter)
 /* ################################################################# */
 {
 /***** Purpose: Creating result table ******/
-//	if (time == Dt)
-//		printf ("ITER \t Time \t u \t v \t T \t SMAX \t SAVG \n");
-//
-//	printf ("%4d %10.3e\t%10.2e\t%10.2e\t%10.2e\t%10.2e\t%10.2e\n", 
-//             iter, time, u[3*NPI/10][2*NPJ/5], v[3*NPI/10][2*NPJ/5], T[3*NPI/10][2*NPJ/5], SMAX, SAVG);
-    ////////////////PIM///////////////////////////         
     if (time == Dt)
 		printf ("ITER  Time\t   u\t       v\t   T\t       SMAX\t   SAVG\n");
 
 	printf ("%4d %11.3e %11.2e %11.2e %11.2e %11.2e %11.2e\n", 
              iter, time, u[NPI][NPJ/2], v[NPI][NPJ/2], T[NPI][NPJ/2], SMAX, SAVG);
-    ////////////////PIM///////////////////////////
 
 } /* printConv */
 
@@ -1448,9 +1404,9 @@ void output(void)
 			vgrid = 0.5*(v[I][j]+v[I  ][j+1]);
 
 			//################BEGIN SELF ADDED CODE################//
-			fprintf(fp, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
-			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], Tplus_u[I][J], Tplus_v[I][J], yplus_u[I][J], yplus_v[I][J], uplus_u[I][J], uplus_v[I][J]);
-//			             1     2     3      4      5        6        7          8         9            10       11         12           13           14            15              16             17
+			fprintf(fp, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
+			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], Tplus_u[I][J], Tplus_v[I][J], yplus_u[I][J], yplus_v[I][J], uplus_u[I][J], uplus_v[I][J], Pee_u[I][J], Pee_v[I][J]);
+//			             1     2     3      4      5        6        7          8         9            10       11         12             13             14             15             16             17              18           19
 			//#################END SELF ADDED CODE#################//  
 		} /* for J */
 		fprintf(fp, "\n");
@@ -1655,10 +1611,13 @@ void memalloc(void)
 	uplus_v = double_2D_matrix(NPI + 2, NPJ + 2);
 	Tplus_u = double_2D_matrix(NPI + 2, NPJ + 2); 
 	Tplus_v = double_2D_matrix(NPI + 2, NPJ + 2);
-	
 	Prandtl = double_2D_matrix(NPI + 2, NPJ + 2);
 	Gamma_L = double_2D_matrix(NPI + 2, NPJ + 2);
 	Gamma_T = double_2D_matrix(NPI + 2, NPJ + 2);
+	
+	// TEST	
+	Pee_u   = double_2D_matrix(NPI + 2, NPJ + 2);
+	Pee_v   = double_2D_matrix(NPI + 2, NPJ + 2);
 	   
 	/* for Properties: */
 	lambda  = double_2D_matrix(NPI + 2, NPJ + 2);
@@ -1796,7 +1755,7 @@ void animation(int time)
 			
 			fprintf(f_p, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
 			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], Tplus_u[I][J], Tplus_v[I][J], yplus_u[I][J], yplus_v[I][J], uplus_u[I][J], uplus_v[I][J]);
-//			             1     2     3      4      5        6        7          8         9            10       11         12           13           14            15              16             17
+//			             1     2     3      4      5        6        7          8         9            10       11         12             13             14              15            16             17
 		} /* for J */
 		fprintf(f_p, "\n");
 	} /* for I */
