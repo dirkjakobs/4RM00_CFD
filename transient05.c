@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 	bound(); /* apply boundary conditions */
 	
 	Count = 0;
-	animation(Count);
+//	animation(Count);
 	
 	for (time = Dt; time <= TOTAL_TIME; time += Dt) {
 		iter = 0; 
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 		SAVG = LARGE;
 	
 		Count=Count+1;
-		animation(Count);
+//		animation(Count);
 		
 	} /* for Dt */
 	output();
@@ -154,7 +154,7 @@ void init(void)
 	grid();
 	
 	// Initialize for animation
-	timestore = 1/Dt;
+	timestore = 1;//1/Dt;
 	nloop = 0;
 	
 	/* Initialising all variables  */
@@ -953,10 +953,12 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			}
 			else if (CONS[I][J][1]*CONS[I][J][3] == true) {
 				if(yplus_u[I][J] < 11.63) {	/* laminar flow, eq. 9.13 */
-					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAs/(0.5*AREAw); // unit [J/(sK)]
+//					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAs/(0.5*AREAw); // unit [J/(sK)]
+					SP[I][J] = -mu[I][J]/Prandtl[I][J]*AREAs/(0.5*AREAw); // unit [J/(sK)]
             	}
 				else {						/* Turbulent flow, eq. 9.24 */
-					SP[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J])* Cp[I][J] * AREAs / Tplus_u[I][J]; // unit [J/(sK)]
+//					SP[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J])* Cp[I][J] * AREAs / Tplus_u[I][J]; // unit [J/(sK)]
+					SP[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J])* AREAs / Tplus_u[I][J]; // unit [J/(sK)]
 
 					/* Coefficient aS, check current position and for wall to the south (J-1) */
 					if      (CONS[I][J-1][0] == true) aS[I][J] = 0.;
@@ -969,9 +971,11 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			// Calculate sourceterm in v-direction:
 			else if (CONS[I][J][2]*CONS[I][J][3] == true) {
 				if(yplus_v[I][J] < 11.63) 	/* laminar flow, eq. 9.13 */
-					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAw/(0.5*AREAs); // unit [J/(sK)]
+//					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAw/(0.5*AREAs); // unit [J/(sK)]
+					SP[I][J] = -mu[I][J]/Prandtl[I][J]*AREAw/(0.5*AREAs); // unit [J/(sK)]
 				else {						/* Turbulent flow, eq. 9.24 */
-					SP[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) *Cp[I][J] / Tplus_v[I][J] * AREAw; // unit [J/(sK)]
+//					SP[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) *Cp[I][J] / Tplus_v[I][J] * AREAw; // unit [J/(sK)]
+					SP[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / Tplus_v[I][J] * AREAw; // unit [J/(sK)]
 
 					/* Coefficient aW, check current position and for wall to the west (I-1) */
 					if      (CONS[I-1][J][0] == true) aW[I][J] = 0.;
@@ -1736,7 +1740,7 @@ void animation(int time)
 	FILE   *f_p, *str, *velu, *velv, *vort;
 /* Plot all results in output.dat */
 	
-	if(timestore*Dt==1){
+	if(timestore==1){
 	
 	char index[10];
 //    sprintf(index, "T%d_%d.dat", nloop, time);
