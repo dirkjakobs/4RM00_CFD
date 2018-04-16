@@ -48,24 +48,24 @@ scale = 0.01
 #show bind
 
 ### Start multiplot 
-set multiplot layout 2,2 rowsfirst
+set multiplot layout 3,2 rowsfirst
 
 #set label 1 'ugrid' at graph 0.0,0.0,0.0 font ',16'
 
 
-#splot 'output.dat' using 1:2:3 with pm3d # --- GRAPH: ugrid
+splot 'output.dat' using 1:2:3 with pm3d # --- GRAPH: ugrid
 
-#splot 'output.dat' using 1:2:4 with pm3d # --- GRAPH: vgrid
+splot 'output.dat' using 1:2:4 with pm3d # --- GRAPH: vgrid
 
-#splot 'output.dat' using 1:2:5 with pm3d # --- GRAPH: p
+splot 'output.dat' using 1:2:5 with pm3d # --- GRAPH: p
 
-#splot 'output.dat' using 1:2:6 with pm3d # --- GRAPH: T
+splot 'output.dat' using 1:2:6 with pm3d # --- GRAPH: T
 
 #splot 'output.dat' using 1:2:7 with pm3d # --- GRAPH: rho
 
 #splot 'output.dat' using 1:2:8 with pm3d # --- GRAPH: mu
 
-splot 'output.dat' using 1:2:9 with pm3d # --- GRAPH: Gamma
+#splot 'output.dat' using 1:2:9 with pm3d # --- GRAPH: Gamma
 
 splot 'output.dat' using 1:2:10 with pm3d # --- GRAPH: k
 
@@ -75,7 +75,7 @@ splot 'output.dat' using 1:2:11 with pm3d # --- GRAPH: eps
 
 #splot 'output.dat' using 1:2:13 with pm3d # --- GRAPH: Tplus_v
 
-splot 'output.dat' using 1:2:14 with pm3d # --- GRAPH: yplus_u
+#splot 'output.dat' using 1:2:14 with pm3d # --- GRAPH: yplus_u
 
 #splot 'output.dat' using 1:2:15 with pm3d # --- GRAPH: yplus_v
 

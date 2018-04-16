@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 		SMAX = LARGE;
 		SAVG = LARGE;
 	
-		Count=Count+1;
+		Count++;
 //		animation(Count);
 		
 	} /* for Dt */
@@ -300,7 +300,6 @@ void bound(void)
 	} /* for I */
 	
 	//#################END SELF ADDED CODE#################//
-
 
 } /* bound */
 
@@ -719,6 +718,7 @@ void vcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 
 			aS[I][j] = max3( Fs, Ds + 0.5*Fs, 0.);
 			aN[I][j] = max3(-Fn, Dn - 0.5*Fn, 0.);
+			
 			aPold    = 0.5*(rho[I][J-1] + rho[I][J])*AREAe*AREAn/Dt;
 
 			/* eq. 8.31 without time dependent terms (see also eq. 5.14): */
@@ -901,7 +901,6 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 	//################BEGIN SELF ADDED CODE################//
     properties(); 
 	calc_wall_coeff();
-
 	//#################END SELF ADDED CODE#################//
 
 	for (I = Istart; I <= Iend; I++) {
@@ -941,10 +940,6 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			aS[I][J] = max3( Fs, Ds + 0.5*Fs, 0.);
 			aN[I][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
 
-			// Set source terms to zero (only needed if you don't use wall functions)
-			SP[i][J] = 0.;
-			Su[I][J] = 0.;
-
 			/* The source terms, page 278 */
 			// Calculate sourceterm of T:
 			if (CONS[I][J][FIXED]*CONS[I][J][HOT] == true) {	/* On a wall, fix temperature */
@@ -953,12 +948,12 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			}
 			else if (CONS[I][J][YPLUS]*CONS[I][J][HOT] == true) {
 				if(yplus_u[I][J] < 11.63) {	/* laminar flow, eq. 9.13 */
-//					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAs/(0.5*AREAw); // unit [J/(sK)]
-					SP[I][J] = -mu[I][J]/Prandtl[I][J]*AREAs/(0.5*AREAw); // unit [J/(sK)]
+					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAs/(0.5*AREAw); // unit [J/(sK)]
+//					SP[I][J] = -mu[I][J]/Prandtl[I][J]*AREAs/(0.5*AREAw); // unit [J/(sK)]
             	}
 				else {						/* Turbulent flow, eq. 9.24 */
-//					SP[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J])* Cp[I][J] * AREAs / Tplus_u[I][J]; // unit [J/(sK)]
-					SP[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J])* AREAs / Tplus_u[I][J]; // unit [J/(sK)]
+					SP[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J])* Cp[I][J] * AREAs / Tplus_u[I][J]; // unit [J/(sK)]
+//					SP[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J])* AREAs / Tplus_u[I][J]; // unit [J/(sK)]
 
 					/* Coefficient aS, check current position and for wall to the south (J-1) */
 					if      (CONS[I][J-1][FIXED] == true) aS[I][J] = 0.;
@@ -971,11 +966,11 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			// Calculate sourceterm in v-direction:
 			else if (CONS[I][J][XPLUS]*CONS[I][J][HOT] == true) {
 				if(yplus_v[I][J] < 11.63) 	/* laminar flow, eq. 9.13 */
-//					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAw/(0.5*AREAs); // unit [J/(sK)]
-					SP[I][J] = -mu[I][J]/Prandtl[I][J]*AREAw/(0.5*AREAs); // unit [J/(sK)]
+					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAw/(0.5*AREAs); // unit [J/(sK)]
+//					SP[I][J] = -mu[I][J]/Prandtl[I][J]*AREAw/(0.5*AREAs); // unit [J/(sK)]
 				else {						/* Turbulent flow, eq. 9.24 */
-//					SP[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) *Cp[I][J] / Tplus_v[I][J] * AREAw; // unit [J/(sK)]
-					SP[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / Tplus_v[I][J] * AREAw; // unit [J/(sK)]
+					SP[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) *Cp[I][J] / Tplus_v[I][J] * AREAw; // unit [J/(sK)]
+//					SP[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / Tplus_v[I][J] * AREAw; // unit [J/(sK)]
 
 					/* Coefficient aW, check current position and for wall to the west (I-1) */
 					if      (CONS[I-1][J][FIXED] == true) aW[I][J] = 0.;
@@ -1107,6 +1102,7 @@ void epscoeff(double **aE, double **aW, double **aN, double **aS, double **aP, d
 			aE[I][J] = max3(-Fe, De - 0.5*Fe, 0.);
 			aS[I][J] = max3( Fs, Ds + 0.5*Fs, 0.);
 			aN[I][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
+			
 			aPold    = rho[I][J]*AREAe*AREAn/Dt;
 
 			/* eq. 8.31 with time dependent terms (see also eq. 5.14): */
@@ -1143,14 +1139,10 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 	Jend   = NPJ;
 
 	conv();
-//    viscosity();
    
-	//################BEGIN SELF ADDED CODE################//
-    properties(); // Including viscosity();	
+    properties(); 
     
-	calc_wall_coeff(); // PIM: With wall functions, for CONS
-
-	//#################END SELF ADDED CODE#################//
+	calc_wall_coeff(); 
     
 	for (I = Istart; I <= Iend; I++) {
 		i = I;
@@ -1273,9 +1265,8 @@ void calc_wall_coeff(void)
 	int    i, j, I, J;
 	double Dx, Dy;
 	
-	properties(); // Including viscosity();
+	properties(); 
 	
-	// PIM: Make Dx and Dy global!
 	Dx = XMAX/NPI;
 	Dy = YMAX/NPJ;
 	
@@ -1323,20 +1314,10 @@ void calc_wall_coeff(void)
                   	Pee_v   [I][J] = Pee(turb_Prandtl, Prandtl[I][J]);
             	}/* else */
 	        } /* if */
-			
-			// Calculate: if both are true (for k)
-			if (CONS[I][J][YPLUS] == true && CONS[I][J][XPLUS] == true) {
-			// ######################### CODE HERE #########################
-			// use mag(x, y) to calculate magnitude of of vector
-			} /* if */
 
         } /* for */
 	} /* for */
 } /* cuplus */
-
-//#################END SELF ADDED CODE#################//
-
-//################BEGIN SELF ADDED CODE################//
 
 /* ################################################################# */
 void properties(void)
