@@ -26,3 +26,9 @@
 //#define TEMP     320.      /* temeperature of constrained parts! */ ### FROM TEXT FILE ###
 #define GAS_CONS   8314.4    /* Gas constant R */
 #define turb_Prandtl 0.9
+
+// MAGIC NUMBERS FOR CONS
+#define FIXED		0
+#define YPLUS       1
+#define XPLUS       2
+#define HOT         3

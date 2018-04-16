@@ -207,12 +207,12 @@ void init(void)
 			uplus_v [I][J] = 1.;
 			
 			// Guess yplus_u near object/wall		
-	        if (CONS[I][J][1] == true) {
+	        if (CONS[I][J][YPLUS] == true) {
 				yplus_u [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (0.5*Dy);
 	        } /* if */
 	        
 	        // Guess yplus_v near object/wall	
-	        if (CONS[I][J][2] == true) {
+	        if (CONS[I][J][XPLUS] == true) {
 				yplus_v [I][J] = sqrt(rho[I][J] * v[I][J] / mu[I][J]) * (0.5*Dx);
 	        } /* if */		
 			//#################END SELF ADDED CODE#################//
@@ -567,10 +567,10 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			
 			//################BEGIN SELF ADDED CODE################//
 			// Calculate sourceterm in u-direction:
-			if (CONS[i][J][0] == true) {
+			if (CONS[I][J][FIXED] == true) {
 				SP[i][J] = - LARGE;
 			}	
-			else if (CONS[I][J][1] == true) {
+			else if (CONS[I][J][YPLUS] == true) {
 				if(yplus_u[I][J] < 11.63)
 					SP[i][J]= -mu[I][J]*AREAs/(0.5*AREAw);
 				else
@@ -592,11 +592,11 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			
 			//################BEGIN SELF ADDED CODE################//
 			/* aS, check current position and for wall to the south (J-1) */
-			if (CONS[I][J][1] == true && CONS[I][J-1][0] == true) aS[i][J]=0.;
+			if (CONS[I][J][YPLUS] == true && CONS[I][J-1][FIXED] == true) aS[i][J]=0.;
 			else      aS[i][J] = max3( Fs, Ds + 0.5*Fs, 0.);
             
 			/* aN, check current position and for wall to the north (J+1) */
-			if (CONS[I][J][1] == true && CONS[I][J+1][0] == true) aN[i][J] =0.;
+			if (CONS[I][J][YPLUS] == true && CONS[I][J+1][FIXED] == true) aN[i][J] =0.;
 			else        aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
 			//#################END SELF ADDED CODE#################//
             
@@ -687,10 +687,10 @@ void vcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 
 			//################BEGIN SELF ADDED CODE################//
 			// Calculate sourceterm in v-direction:
-			if (CONS[I][J][0] == true) {
+			if (CONS[I][J][FIXED] == true) {
 				SP[I][j] = -LARGE;
 			}
-			else if (CONS[I][J][2] == true) {
+			else if (CONS[I][J][XPLUS] == true) {
 				if(yplus_v[I][J] < 11.63)
 					SP[i][J]  = -mu[I][J]*AREAw/(0.5*AREAs);
 				else
@@ -710,11 +710,11 @@ void vcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			/* The coefficients (hybrid differencing scheme) */
 			
 			/* aW, check current position and for wall to the west (I-1) */
-			if (CONS[I][J][2] == true && CONS[I-1][J][0] == true) aW[I][j]=0.;
+			if (CONS[I][J][XPLUS] == true && CONS[I-1][J][FIXED] == true) aW[I][j]=0.;
 			else      aW[I][j] = max3( Fw, Dw + 0.5*Fw, 0.);
             
 			/* aE, check current position and for wall to the east (I+1) */
-			if (CONS[I][J][2] == true && CONS[I+1][J][0] == true) aE[I][j]=0.;
+			if (CONS[I][J][XPLUS] == true && CONS[I+1][J][FIXED] == true) aE[I][j]=0.;
 			else      aE[I][j] = max3(-Fe, De - 0.5*Fe, 0.);
 
 			aS[I][j] = max3( Fs, Ds + 0.5*Fs, 0.);
@@ -947,11 +947,11 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 
 			/* The source terms, page 278 */
 			// Calculate sourceterm of T:
-			if (CONS[I][J][0]*CONS[I][J][3] == true) {	/* On a wall, fix temperature */
+			if (CONS[I][J][FIXED]*CONS[I][J][HOT] == true) {	/* On a wall, fix temperature */
 				SP[I][J] = - LARGE;
 				Su[I][J] = LARGE*TEMP;
 			}
-			else if (CONS[I][J][1]*CONS[I][J][3] == true) {
+			else if (CONS[I][J][YPLUS]*CONS[I][J][HOT] == true) {
 				if(yplus_u[I][J] < 11.63) {	/* laminar flow, eq. 9.13 */
 //					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAs/(0.5*AREAw); // unit [J/(sK)]
 					SP[I][J] = -mu[I][J]/Prandtl[I][J]*AREAs/(0.5*AREAw); // unit [J/(sK)]
@@ -961,15 +961,15 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 					SP[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J])* AREAs / Tplus_u[I][J]; // unit [J/(sK)]
 
 					/* Coefficient aS, check current position and for wall to the south (J-1) */
-					if      (CONS[I][J-1][0] == true) aS[I][J] = 0.;
+					if      (CONS[I][J-1][FIXED] == true) aS[I][J] = 0.;
 					/* Coefficient aN, check current position and for wall to the north (J+1) */
-					else if (CONS[I][J+1][0] == true) aN[I][J] = 0.;  
+					else if (CONS[I][J+1][FIXED] == true) aN[I][J] = 0.;  
 				}
 				/* Source term Su */
 				Su[I][J] = -SP[I][J]*TEMP;
 			}
 			// Calculate sourceterm in v-direction:
-			else if (CONS[I][J][2]*CONS[I][J][3] == true) {
+			else if (CONS[I][J][XPLUS]*CONS[I][J][HOT] == true) {
 				if(yplus_v[I][J] < 11.63) 	/* laminar flow, eq. 9.13 */
 //					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAw/(0.5*AREAs); // unit [J/(sK)]
 					SP[I][J] = -mu[I][J]/Prandtl[I][J]*AREAw/(0.5*AREAs); // unit [J/(sK)]
@@ -978,9 +978,9 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 					SP[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / Tplus_v[I][J] * AREAw; // unit [J/(sK)]
 
 					/* Coefficient aW, check current position and for wall to the west (I-1) */
-					if      (CONS[I-1][J][0] == true) aW[I][J] = 0.;
+					if      (CONS[I-1][J][FIXED] == true) aW[I][J] = 0.;
 					/* Coefficient aE, check current position and for wall to the east (I+1) */
-					else if (CONS[I+1][J][0] == true) aE[I][J] = 0.;
+					else if (CONS[I+1][J][FIXED] == true) aE[I][J] = 0.;
 				}
 				/* Source term Su */
 				Su[I][J] = -SP[I][J]*TEMP;
@@ -1073,22 +1073,22 @@ void epscoeff(double **aE, double **aW, double **aN, double **aS, double **aP, d
 			//################BEGIN SELF ADDED CODE################//
 			
 			// Set sourceterm to zero on walls or objects:
-			if (CONS[I][J][0] == true) {
+			if (CONS[I][J][FIXED] == true) {
 				Su[I][J]  = 0;
 				SP[I][J]  = 0;			
 			}
 			// Calculate sourceterm in u-direction:
-			else if (CONS[I][J][1] == true) {
+			else if (CONS[I][J][YPLUS] == true) {
 				SP[I][J] = -LARGE;
 				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*0.5*AREAw)*LARGE;
 			}
 			// Calculate sourceterm in v-direction:
-			else if (CONS[I][J][2] == true) {
+			else if (CONS[I][J][XPLUS] == true) {
 				SP[I][J] = -LARGE;
 				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*0.5*AREAe)*LARGE;
 			}
 			// CHECK!!! Dubbel blokje: Epsilon gebruikt de afstand tot de wand. Je kan hiervoor de lengte van de vector (deltax, deltay) gebruiken.
-			else if (CONS[I][J][1]*CONS[I][J][2] == true) { 
+			else if (CONS[I][J][YPLUS]*CONS[I][J][XPLUS] == true) { 
 				SP[I][J] = -LARGE; 
 				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*mag(0.5*AREAw,0.5*AREAe))*LARGE; 
 			}
@@ -1188,15 +1188,15 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			/* The source terms */
 			
 			// Set sourceterm to zero on walls or objects:
-			if (CONS[I][J][0] == true) {
+			if (CONS[I][J][FIXED] == true) {
 				Su[I][J]  = 0;
 				SP[I][J]  = 0;			
 			}
 			/* Check if one of the source terms is valid */
-			else if (CONS[I][J][1] == true || CONS[I][J][2] == true) {
+			else if (CONS[I][J][YPLUS] == true || CONS[I][J][XPLUS] == true) {
 
 				// Calculate sourceterm in u-direction:
-				if (CONS[I][J][1] == true) {
+				if (CONS[I][J][YPLUS] == true) {
 					/* store in SP_u and SP, to calc magnitude when both xplus and yplus are active */
 					SP_u[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_u[I][J]/(0.5*AREAw) * AREAs * AREAw;
 					SP[I][J] = SP_u[I][J];
@@ -1204,7 +1204,7 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 					Su[I][J] = Su_u[I][J];
 				}
 				// Calculate sourceterm in v-direction:
-				if (CONS[I][J][2] == true) {
+				if (CONS[I][J][XPLUS] == true) {
 					SP_v[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_v[I][J]/(0.5*AREAs) * AREAs * AREAw;
 					SP[I][J] = SP_v[I][J];
 					Su_v[I][J] = tw[I][J] * 0.5 * (v[I][j] + v[I][j+1])/(0.5*AREAs) * AREAs * AREAw;
@@ -1212,7 +1212,7 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 				}
 				
 				// Calculate magnitude of source terms if both valid: k gaat uit van de wall shear stress. Je zou deze kunnen schrijven als de lengte van de vector (du/dy, dv/dx).
-				if (CONS[I][J][1]*CONS[I][J][2] == true) {
+				if (CONS[I][J][YPLUS]*CONS[I][J][XPLUS] == true) {
 					SP[I][J] = mag(SP_u[I][J], SP_v[I][J]);
 					Su[I][J] = mag(Su_u[I][J], Su_v[I][J]);
 				}
@@ -1230,19 +1230,19 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			/* The coefficients (hybrid differencing sheme) */
 
 			/* aW, check current position and for wall to the west (I-1) */
-			if (CONS[I][J][2] == true && CONS[I-1][J][0] == true) aW[I][j]=0.;
+			if (CONS[I][J][XPLUS] == true && CONS[I-1][J][FIXED] == true) aW[I][j]=0.;
 			else      aW[I][j] = max3( Fw, Dw + 0.5*Fw, 0.);
             
 			/* aE, check current position and for wall to the east (I+1) */
-			if (CONS[I][J][2] == true && CONS[I+1][J][0] == true) aE[I][j]=0.;
+			if (CONS[I][J][XPLUS] == true && CONS[I+1][J][FIXED] == true) aE[I][j]=0.;
 			else      aE[I][j] = max3(-Fe, De - 0.5*Fe, 0.);
 
 			/* aS, check current position and for wall to the south (J-1) */
-			if (CONS[I][J][1] == true && CONS[I][J-1][0] == true) aS[i][J]=0.;
+			if (CONS[I][J][YPLUS] == true && CONS[I][J-1][FIXED] == true) aS[i][J]=0.;
 			else      aS[i][J] = max3( Fs, Ds + 0.5*Fs, 0.);
             
 			/* aN, check current position and for wall to the north (J+1) */
-			if (CONS[I][J][1] == true && CONS[I][J+1][0] == true) aN[i][J] =0.;
+			if (CONS[I][J][YPLUS] == true && CONS[I][J+1][FIXED] == true) aN[i][J] =0.;
 			else      aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
             
             aPold    = rho[I][J]*AREAe*AREAn/Dt;
@@ -1285,7 +1285,7 @@ void calc_wall_coeff(void)
 			j = J;
 	    	
 	    	// Calculate: yplus_u
-	        if (CONS[I][J][1] == true) {
+	        if (CONS[I][J][YPLUS] == true) {
 				        
 	        	if (yplus_u[I][J] < 11.63) { // PIM: Initialise yplus_u instead of yplus1!
                 	tw[I][J]       = mu[I][J] * 0.5 * (u[i][J]+u[i+1][J]) / (0.5*Dy); // PIM: in general holds: 0.5*Dy = y[1] -y[0]
@@ -1305,7 +1305,7 @@ void calc_wall_coeff(void)
 	        } /* if */
 	        
 	        // Calculate: yplus_v
-	        if (CONS[I][J][2] == true) {
+	        if (CONS[I][J][XPLUS] == true) {
 				        
 	        	if (yplus_v[I][J] < 11.63) { 
                 	tw[I][J]       = mu[I][J] * 0.5 * (v[I][j]+v[I][j+1]) / (0.5*Dx); 
@@ -1325,7 +1325,7 @@ void calc_wall_coeff(void)
 	        } /* if */
 			
 			// Calculate: if both are true (for k)
-			if (CONS[I][J][1] == true && CONS[I][J][2] == true) {
+			if (CONS[I][J][YPLUS] == true && CONS[I][J][XPLUS] == true) {
 			// ######################### CODE HERE #########################
 			// use mag(x, y) to calculate magnitude of of vector
 			} /* if */
@@ -1688,9 +1688,9 @@ void readInput (char *name)
 	for (icons = 0; icons < ncons; icons++) {
 		fscanf( fp, " %d  %d  %d", &I, &J, &ad);
 		/* position constrain in 0 */
-		CONS[I][J][0] = true;
+		CONS[I][J][FIXED] = true;
 		/* temperature constrain in 3 */
-		CONS[I][J][3] = ad;
+		CONS[I][J][HOT] = ad;
 	}
 
 	// Print results
@@ -1704,9 +1704,9 @@ void readInput (char *name)
 	for (iyplus_u = 0; iyplus_u < nyplus_u; iyplus_u++) {
 		fscanf( fp, " %d  %d  %d", &I, &J, &ad);
 		/* yplus_u constrain in 1 */
-		CONS[I][J][1] = true;
+		CONS[I][J][YPLUS] = true;
 		/* temperature constrain in 3 */
-		CONS[I][J][3] = ad;
+		CONS[I][J][HOT] = ad;
 	}
 
 	// Print results
@@ -1720,9 +1720,9 @@ void readInput (char *name)
 	for (iyplus_v = 0; iyplus_v < nyplus_v; iyplus_v++) {
 		fscanf( fp, " %d  %d  %d", &I, &J, &ad);
 		/* yplus_u constrain in 2 */
-		CONS[I][J][2] = true;
+		CONS[I][J][XPLUS] = true;
 		/* temperature constrain in 3 */
-		CONS[I][J][3] = ad;
+		CONS[I][J][HOT] = ad;
 	}
 
 	// Print results
