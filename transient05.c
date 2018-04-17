@@ -945,45 +945,70 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			aN[I][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
 
 			/* The source terms, page 278 */
-			// Calculate sourceterm of T:
-			if (CONS[I][J][FIXED]*CONS[I][J][HOT] == true) {	/* On a wall, fix temperature */
+
+			/* On a wall, fix temperature */
+			if (CONS[I][J][FIXED]*CONS[I][J][HOT] == true) {
 				SP[I][J] = - LARGE;
 				Su[I][J] = LARGE*TEMP;
 			}
-			else if (CONS[I][J][YPLUS]*CONS[I][J][HOT] == true) {
-				if(yplus_u[I][J] < 11.63) {	/* laminar flow, eq. 9.13 */
-					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAs/(0.5*AREAw); // unit [J/(sK)]
-//					SP[I][J] = -mu[I][J]/Prandtl[I][J]*AREAs/(0.5*AREAw); // unit [J/(sK)]
-            	}
-				else {						/* Turbulent flow, eq. 9.24 */
-					SP[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J])* Cp[I][J] * AREAs / Tplus_u[I][J]; // unit [J/(sK)]
-//					SP[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J])* AREAs / Tplus_u[I][J]; // unit [J/(sK)]
+			/* Check if one of the source terms is valid */
+			else if (CONS[I][J][YPLUS]*CONS[I][J][HOT] == true || CONS[I][J][XPLUS]*CONS[I][J][HOT] == true) {
 
-					/* Coefficient aS, check current position and for wall to the south (J-1) */
-					if      (CONS[I][J-1][FIXED] == true) aS[I][J] = 0.;
-					/* Coefficient aN, check current position and for wall to the north (J+1) */
-					else if (CONS[I][J+1][FIXED] == true) aN[I][J] = 0.;  
+				/* Calculate sourceterm in u-direction: */
+				if (CONS[I][J][YPLUS]*CONS[I][J][HOT] == true) {
+					
+					if(yplus_u[I][J] < 11.63) {	/* laminar flow, eq. 9.13 */
+//						SP_u[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAs/(0.5*AREAw); // unit [J/(sK)]
+						SP_u[I][J] = -mu[I][J]/Prandtl[I][J]*AREAs/(0.5*AREAw);      		
+					}
+					else {	/* Turbulent flow, eq. 9.24 */
+//						SP_u[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J])* Cp[I][J] * AREAs / Tplus_u[I][J]; // unit [J/(sK)]
+						SP_u[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J])* AREAs / Tplus_u[I][J];
+					
+						/* Coefficient aS, check current position and for wall to the south (J-1) */
+						if      (CONS[I][J-1][FIXED] == true) aS[I][J] = 0.;
+						/* Coefficient aN, check current position and for wall to the north (J+1) */
+						else if (CONS[I][J+1][FIXED] == true) aN[I][J] = 0.; 
+					}
+					/* Source term Su */
+					Su_u[I][J] = -SP_u[I][J]*TEMP;
+					
+					/* Store source terms */
+					SP[I][J] = SP_u[I][J];
+					Su[I][J] = Su_u[I][J]; 
 				}
-				/* Source term Su */
-				Su[I][J] = -SP[I][J]*TEMP;
+				
+				/* Calculate sourceterm in v-direction: */
+				if (CONS[I][J][XPLUS]*CONS[I][J][HOT] == true) {
+
+					if(yplus_v[I][J] < 11.63) { 	/* laminar flow, eq. 9.13 */
+//						SP_v[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAw/(0.5*AREAs); // unit [J/(sK)]
+						SP_v[I][J] = -mu[I][J]/Prandtl[I][J]*AREAw/(0.5*AREAs);
+					}
+					else {						/* Turbulent flow, eq. 9.24 */
+//						SP_v[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) *Cp[I][J] / Tplus_v[I][J] * AREAw; // unit [J/(sK)]
+						SP_v[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / Tplus_v[I][J] * AREAw;
+					
+						/* Coefficient aW, check current position and for wall to the west (I-1) */
+						if      (CONS[I-1][J][FIXED] == true) aW[I][J] = 0.;
+						/* Coefficient aE, check current position and for wall to the east (I+1) */
+						else if (CONS[I+1][J][FIXED] == true) aE[I][J] = 0.;
+					}
+
+					/* Source term Su */
+					Su_v[I][J] = -SP_v[I][J]*TEMP;
+
+					/* Store source terms */
+					SP[I][J] = SP_v[I][J];
+					Su[I][J] = Su_v[I][J];
+				}
+				
+				/* Calculate sourceterm in u&v-direction: */
+				if (CONS[I][J][YPLUS]*CONS[I][J][XPLUS]*CONS[I][J][HOT] == true) {
+					SP[I][J] = mag(SP_u[I][J], SP_v[I][J]);
+					Su[I][J] = mag(Su_u[I][J], Su_v[I][J]);
+				}
 			}
-			// Calculate sourceterm in v-direction:
-			else if (CONS[I][J][XPLUS]*CONS[I][J][HOT] == true) {
-				if(yplus_v[I][J] < 11.63) 	/* laminar flow, eq. 9.13 */
-					SP[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAw/(0.5*AREAs); // unit [J/(sK)]
-//					SP[I][J] = -mu[I][J]/Prandtl[I][J]*AREAw/(0.5*AREAs); // unit [J/(sK)]
-				else {						/* Turbulent flow, eq. 9.24 */
-					SP[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) *Cp[I][J] / Tplus_v[I][J] * AREAw; // unit [J/(sK)]
-//					SP[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / Tplus_v[I][J] * AREAw; // unit [J/(sK)]
-
-					/* Coefficient aW, check current position and for wall to the west (I-1) */
-					if      (CONS[I-1][J][FIXED] == true) aW[I][J] = 0.;
-					/* Coefficient aE, check current position and for wall to the east (I+1) */
-					else if (CONS[I+1][J][FIXED] == true) aE[I][J] = 0.;
-				}
-				/* Source term Su */
-				Su[I][J] = -SP[I][J]*TEMP;
-			}	
 			else {	/* for adiabatic walls, or places without wall*/
 				SP[i][J] = 0.;
 				Su[I][J] = 0.;
@@ -1658,7 +1683,8 @@ void readInput (char *name)
 	// print grid parameters
 	printf("From text file:\nGrid:           XMAX = %5.2f [m]         YMAX =  %4.2f [m]\n",XMAX,YMAX);
 	printf("                 NPI =   %3d              NPJ =   %3d\n",NPI,NPJ);
-	printf("Solver:      relax_u =  %4.2f          relax_T =  %4.2f               Dt = %5.3f \n",relax_u,relax_T, Dt);
+	printf("Solver:      relax_u =  %4.2f          relax_T =  %4.2f\n",relax_u,relax_T);
+	printf("Time:             Dt =%6.4f [s]       t_max =  %5.2f [s]\n",Dt, TOTAL_TIME);
 	printf("Iterations: MAX_ITER =  %4d           U_ITER =  %4d           V_ITER =  %4d\n",MAX_ITER,   U_ITER, V_ITER);
 	printf("             PC_ITER =  %4d         EPS_ITER =  %4d           K_ITER =  %4d\n", PC_ITER, EPS_ITER, K_ITER);
 	printf("Physics:       Temp. =   %3.0f [K]         U_IN = %5.1f [m/s]\n",TEMP,U_IN);

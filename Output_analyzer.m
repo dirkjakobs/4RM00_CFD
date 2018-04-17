@@ -49,7 +49,7 @@ function Q = AddedHeat(X_pos)
     
     % plot T
     figure(1)
-    surf(X, Y, T)
+    surf(X, Y, log(T))
     hold on
     colorbar
     view(0,90)
@@ -76,8 +76,8 @@ function Q = AddedHeat(X_pos)
         end
         
         % plot line where temperature is measured   
-        line(X(:,I),Y(:,I),T(:,I),'Color','red')
-        fprintf('Q_added at [x=%4.2f] = %f [W]\n',X_pos(i),Q(i))
+        line(X(:,I),Y(:,I),log(T(:,I)),'Color','red')
+        fprintf('Q_added at [x=%4.2f] = %f [W] Tavg = %3.0f [K]\n',X_pos(i),Q(i),mean(T(:,I)))
     end
 end
 
