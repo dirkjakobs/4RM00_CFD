@@ -6,52 +6,16 @@ Data = load('output.dat');
 X = Data(:,1);  Y = Data(:,2);      % load x and y data
 NPJ = sum(X == X(1));               % Get original matrix size from x and y
 NPI = sum(Y == Y(1));
-X = reshape(X,[NPJ, NPI]);          % Reshape x
-Y = reshape(Y,[NPJ, NPI]);          % Reshape y
+X = reshape(X,[NPJ, NPI]);
+Y = reshape(Y,[NPJ, NPI]);
+u = reshape(Data(:,3),[NPJ, NPI]);
 
-%
-%vq = griddata(x,y,v,xgrid,ygrid);
-%uq = griddata(x,y,u,xgrid,ygrid);
-
-YMAX = ReadLine('constraints.dat',2);
-NPJX = ReadLine('constraints.dat',4);
-DY = YMAX / NPJX;
-
-XMAX = ReadLine('constraints.dat',1);
-NPIX = ReadLine('constraints.dat',3);
-DX = XMAX / NPIX;
-
-[xgrid,ygrid] = meshgrid(0:DX:XMAX,0:DY:YMAX);
-
-
-u = reshape(Data(:,3),[NPJ, NPI]);      v = reshape(Data(:,4),[NPJ, NPI]);
-p = reshape(Data(:,5),[NPJ, NPI]);      T = reshape(Data(:,6),[NPJ, NPI]);
-rho = reshape(Data(:,7),[NPJ, NPI]);    mu = reshape(Data(:,8),[NPJ, NPI]);
-
-eps = reshape(Data(:,11),[NPJ, NPI]);
-
-
-% plot T
-figure(3)
-surf(X, Y, eps)
-hold on
-
-colorbar
-view(0,90)
-
-
-%% Load data from constraints file
-
-
-
-%% Data analysis
-
-
-figure(2)
-quiver(X,Y,u,v)
+%plot with imagplot command: imagplot( X, Y, data, 'title');
+FIG = imagplot(X,Y,u,'Velocity in u-direction [m/s]');
 
 Q = AddedHeat([0,0.15,0.3,0.45]);
 
+%% Functions
 
 function Q = AddedHeat(X_pos)
 
@@ -69,13 +33,7 @@ function Q = AddedHeat(X_pos)
     T = reshape(Data(:,6),[NPJ, NPI]);
     
     % plot T
-    figure(1)
-    surf(X, Y, T)
-    %shading interp
-    hold on
-    set(gca,'ZScale','log')
-    colorbar
-    view(0,90)
+    TPLOT = imagplot(X,Y,T,'Temperature [K]');
     
     % Get values from constraints file
     YMAX = ReadLine('constraints.dat',2);
@@ -99,6 +57,7 @@ function Q = AddedHeat(X_pos)
         end
         
         % plot line where temperature is measured   
+        figure(TPLOT)
         line(X(:,I),Y(:,I),T(:,I),'Color','red')
         fprintf('Q_added at [x=%4.2f] = %f [W] Tavg = %6.2f [K]\n',X_pos(i),Q(i),mean(T(:,I)))
     end
@@ -111,4 +70,27 @@ function out = ReadLine(filename, linenum)
     out = strsplit(string(C{1}));
     out = double(out(2));
     fclose(fileID);
+end
+
+function FIG = imagplot(X,Y,data,titel)
+    XMIN = min(X(:));
+    XMAX = max(X(:));
+    YMIN = min(Y(:));
+    YMAX = max(Y(:));    
+    FIG = figure();
+    surf(X, Y, data)
+    hold on
+
+    shading interp
+    %colormap(jet(256))
+    colorbar
+    view(0,90)
+    axis equal
+    grid off
+    xlim([-0.05*XMAX 1.05*XMAX])
+    ylim([-YMAX 2*YMAX])
+    set(gca,'YTick',[0 : 0.015 : 0.045]);
+    set(gca,'XTick',[0 : 0.15 : 0.45]);
+    title(titel)
+
 end
