@@ -20,8 +20,8 @@ set style data lines
 
 
 #Range of axis:
-set xrange [ 0.0 : 1.0 ] noreverse nowriteback
-set yrange [ 0 : 0.2 ] noreverse nowriteback
+#set xrange [ 0.0 : 1.0 ] noreverse nowriteback
+#set yrange [ 0 : 0.2 ] noreverse nowriteback
 #set zrange [ -2.0 : 5.0 ] noreverse nowriteback
 
 #Set equal scale along all three axis

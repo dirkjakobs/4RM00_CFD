@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 	bound(); /* apply boundary conditions */
 	
 	Count = 0;
-	animation(Count);
+//	animation(Count);
 	
 	for (time = Dt; time <= TOTAL_TIME; time += Dt) {
 		iter = 0; 
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 		SAVG = LARGE;
 	
 		Count++;
-		animation(Count);
+//		animation(Count);
 		
 	} /* for Dt */
 	output();
@@ -569,7 +569,7 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 					SP[i][J]= -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus[I][J] * AREAs;
 			}
 			else
-				SP[i][J] = 0.;  			
+				SP[i][J] = 0.;  /* Source term Su, see page 451. */			
 
 			Su[i][J] = (mueff[I][J]*dudx[I][J] - mueff[I-1][J]*dudx[I-1][J]) / (x[I] - x[I-1]) + 
 			           (mun        *dvdx[i][j+1] - mus        *dvdx[i][j]) / (y_v[j+1] - y_v[j]) -
@@ -1397,7 +1397,8 @@ void output(void)
 			ugrid = 0.5*(u[i][J]+u[i+1][J  ]);
 			vgrid = 0.5*(v[I][j]+v[I  ][j+1]);
 
-			if (CONS[I][J][FIXED]*CONS[I][J][HOT] == true) {	/* On a wall, fix temperature */
+			/* On an object set pressure to zero */
+			if (CONS[I][J][FIXED] == true) {	
 				p[I][J] = 0;
 			}
 			fprintf(fp, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
@@ -1744,10 +1745,16 @@ void animation(int time)
 			j = J;
 			ugrid = 0.5*(u[i][J]+u[i+1][J  ]); /* interpolated horizontal velocity */
 			vgrid = 0.5*(v[I][j]+v[I  ][j+1]); /* interpolated vertical velocity */
-			
-			fprintf(f_p, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
-			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], Tplus_u[I][J], Tplus_v[I][J], yplus[I][J], xplus[I][J], uplus[I][J], vplus[I][J]);
-//			             1     2     3      4      5        6        7          8         9            10       11         12             13             14              15            16             17
+
+			/* On an object set pressure to zero */
+			if (CONS[I][J][FIXED] == true) {	
+				p[I][J] = 0;
+			}
+			//################BEGIN SELF ADDED CODE################//
+			fprintf(f_p, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
+			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], Tplus_u[I][J], Tplus_v[I][J], yplus[I][J], xplus[I][J], uplus[I][J], vplus[I][J], Pee_u[I][J], Pee_v[I][J]);
+//			             1     2     3      4      5        6        7          8         9            10       11         12             13             14             15             16             17              18           19
+			//#################END SELF ADDED CODE#################//  
 		} /* for J */
 		fprintf(f_p, "\n");
 	} /* for I */

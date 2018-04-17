@@ -6,12 +6,12 @@ unset key
 set view equal xy 
 set view 0,0,2
 
-set cbrange [250:320] # Temp
+#set cbrange [270:320] # Temp
 #set cbrange [-1:4]   # Vel_u
 
 set terminal png size 1024,768 crop enhanced
 
-do for [i=0:140]{
+do for [i=0:100]{
 
 output_file = sprintf('T_%d_animation.png',i)
 
