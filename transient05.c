@@ -190,7 +190,8 @@ void init(void)
 			rho    [I][J] = rho_init;      				/* Density */
 			mu     [I][J] = mu_init;    				/* Viscosity */
 			Cp     [I][J] = Cp_init;     				/* J/(K*kg) Heat capacity - assumed constant for this problem */
-			Gamma  [I][J] = lambda_init/Cp[I][J];       /* Thermal conductivity divided by heat capacity - assumed laminair in initial state */
+			lambda [I][J] = lambda_init;				/* Thermal conductivity k [W/(mK)] */
+			Gamma  [I][J] = lambda[I][J]/Cp[I][J];      /* Thermal conductivity divided by heat capacity - assumed laminair in initial state */
 			Prandtl[I][J] = mu[I][J]/Gamma[I][J]; 		/* laminar (or moleculair) Prandtl number mu*Cp/K (eq. 3.50) */
 			u_old  [i][J] = u[i][J];  					/* Velocity in x-direction old timestep */
 			v_old  [I][j] = v[I][j];  					/* Velocity in y-direction old timestep */
@@ -201,19 +202,19 @@ void init(void)
 			
 			//################BEGIN SELF ADDED CODE################//
 			// Set yplus and uplus to 1
-			yplus_u [I][J] = 1.;
-			yplus_v [I][J] = 1.;
-			uplus_u [I][J] = 1.;
-			uplus_v [I][J] = 1.;
+			yplus [I][J] = 1.;
+			xplus [I][J] = 1.;
+			uplus [I][J] = 1.;
+			vplus [I][J] = 1.;
 			
-			// Guess yplus_u near object/wall		
+			// Guess yplus near object/wall		
 	        if (CONS[I][J][YPLUS] == true) {
-				yplus_u [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (0.5*Dy);
+				yplus [I][J] = sqrt(rho[I][J] * u[I][J] / mu[I][J]) * (0.5*Dy);
 	        } /* if */
 	        
-	        // Guess yplus_v near object/wall	
+	        // Guess xplus near object/wall	
 	        if (CONS[I][J][XPLUS] == true) {
-				yplus_v [I][J] = sqrt(rho[I][J] * v[I][J] / mu[I][J]) * (0.5*Dx);
+				xplus [I][J] = sqrt(rho[I][J] * v[I][J] / mu[I][J]) * (0.5*Dx);
 	        } /* if */		
 			//#################END SELF ADDED CODE#################//
 			
@@ -570,10 +571,10 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 				SP[i][J] = - LARGE;
 			}	
 			else if (CONS[I][J][YPLUS] == true) {
-				if(yplus_u[I][J] < 11.63)
+				if(yplus[I][J] < 11.63)
 					SP[i][J]= -mu[I][J]*AREAs/(0.5*AREAw);
 				else
-					SP[i][J]= -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_u[I][J] * AREAs;
+					SP[i][J]= -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus[I][J] * AREAs;
 			}
 			else
 				SP[i][J] = 0.;
@@ -690,10 +691,10 @@ void vcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 				SP[I][j] = -LARGE;
 			}
 			else if (CONS[I][J][XPLUS] == true) {
-				if(yplus_v[I][J] < 11.63)
+				if(xplus[I][J] < 11.63)
 					SP[i][J]  = -mu[I][J]*AREAw/(0.5*AREAs);
 				else
-					SP[i][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus_v[I][J] * AREAw;
+					SP[i][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / vplus[I][J] * AREAw;
 			}
 			// Set source terms to 0 if no vertical boundaries:
 			else
@@ -947,15 +948,17 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 				SP[I][J] = - LARGE;
 				Su[I][J] = LARGE*TEMP;
 			}
+			
 			/* Check if one of the source terms is valid */
 			else if (CONS[I][J][YPLUS]*CONS[I][J][HOT] == true || CONS[I][J][XPLUS]*CONS[I][J][HOT] == true) {
 
 				/* Calculate sourceterm in u-direction: */
 				if (CONS[I][J][YPLUS]*CONS[I][J][HOT] == true) {
 					
-					if(yplus_u[I][J] < 11.63) {	/* laminar flow, eq. 9.13 */
+					if(yplus[I][J] < 11.63) {	/* laminar flow, eq. 9.13 */
 //						SP_u[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAs/(0.5*AREAw); // unit [J/(sK)]
-						SP_u[I][J] = -mu[I][J]/Prandtl[I][J]*AREAs/(0.5*AREAw);      		
+						SP_u[I][J] = -mu[I][J]/Prandtl[I][J]*AREAs/(0.5*AREAw);
+     		
 					}
 					else {	/* Turbulent flow, eq. 9.24 */
 //						SP_u[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J])* Cp[I][J] * AREAs / Tplus_u[I][J]; // unit [J/(sK)]
@@ -968,16 +971,17 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 					}
 					/* Source term Su */
 					Su_u[I][J] = -SP_u[I][J]*TEMP;
-					
+
 					/* Store source terms */
 					SP[I][J] = SP_u[I][J];
-					Su[I][J] = Su_u[I][J]; 
+					Su[I][J] = Su_u[I][J];
+
 				}
 				
 				/* Calculate sourceterm in v-direction: */
 				if (CONS[I][J][XPLUS]*CONS[I][J][HOT] == true) {
 
-					if(yplus_v[I][J] < 11.63) { 	/* laminar flow, eq. 9.13 */
+					if(xplus[I][J] < 11.63) { 	/* laminar flow, eq. 9.13 */
 //						SP_v[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAw/(0.5*AREAs); // unit [J/(sK)]
 						SP_v[I][J] = -mu[I][J]/Prandtl[I][J]*AREAw/(0.5*AREAs);
 					}
@@ -1001,7 +1005,8 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 				
 				/* Calculate sourceterm in u&v-direction: */
 				if (CONS[I][J][YPLUS]*CONS[I][J][XPLUS]*CONS[I][J][HOT] == true) {
-					SP[I][J] = mag(SP_u[I][J], SP_v[I][J]);
+					
+					SP[I][J] = -mag(SP_u[I][J], SP_v[I][J]);	/* SP should always be negative */
 					Su[I][J] = mag(Su_u[I][J], Su_v[I][J]);
 				}
 			}
@@ -1090,38 +1095,38 @@ void epscoeff(double **aE, double **aW, double **aN, double **aS, double **aP, d
 			Dn = mut[I  ][J  ]*mut[I  ][J+1]/sigmaeps/(mut[I  ][J  ]*(y[J+1] - y_v[j+1]) + mut[I  ][J+1]*(y_v[j+1] - y[J  ]))*AREAn;
 
 			/* The source terms */
-			//################BEGIN SELF ADDED CODE################//
 			
 			// Set sourceterm to zero on walls or objects:
 			if (CONS[I][J][FIXED] == true) {
 				Su[I][J]  = 0;
 				SP[I][J]  = 0;			
 			}
-			// Calculate sourceterm in u-direction:
+			/* Calculate sourceterm in u&v-direction: */
+			else if (CONS[I][J][YPLUS]*CONS[I][J][XPLUS] == true) {
+				SP[I][J] = -LARGE;
+				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*mag(0.5*AREAw,0.5*AREAe))*LARGE;
+			}
+			/* Calculate sourceterm in u-direction: */
 			else if (CONS[I][J][YPLUS] == true) {
 				SP[I][J] = -LARGE;
 				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*0.5*AREAw)*LARGE;
 			}
-			// Calculate sourceterm in v-direction:
+			/* Calculate sourceterm in v-direction: */
 			else if (CONS[I][J][XPLUS] == true) {
 				SP[I][J] = -LARGE;
 				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*0.5*AREAe)*LARGE;
+
 			}
-			// CHECK!!! Dubbel blokje: Epsilon gebruikt de afstand tot de wand. Je kan hiervoor de lengte van de vector (deltax, deltay) gebruiken.
-			else if (CONS[I][J][YPLUS]*CONS[I][J][XPLUS] == true) { 
-				SP[I][J] = -LARGE; 
-				Su[I][J] = pow(Cmu,0.75)*pow(k[I][J],1.5)/(kappa*mag(0.5*AREAw,0.5*AREAe))*LARGE; 
-			}
+			/* Normal grid cell, not on or near object.*/
 			else {
 				Su[I][J] = C1eps * eps[I][J] / k[I][J] * 2. * mut[I][J] * E2[I][J];
 				SP[I][J] = -C2eps * rho[I][J] * eps[I][J] / (k[I][J] + SMALL);
-			}
-			//#################END SELF ADDED CODE#################// 
+			}			
 			                                 
 			Su[I][J] *= AREAw*AREAs;
 			SP[I][J] *= AREAw*AREAs;
 
-			/* The coefficients (hybrid differencing sheme) */
+			/* The coefficients (hybrid differencing scheme) */
 
 			aW[I][J] = max3( Fw, Dw + 0.5*Fw, 0.);
 			aE[I][J] = max3(-Fe, De - 0.5*Fe, 0.);
@@ -1215,14 +1220,14 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 				// Calculate sourceterm in u-direction:
 				if (CONS[I][J][YPLUS] == true) {
 					/* store in SP_u and SP, to calc magnitude when both xplus and yplus are active */
-					SP_u[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_u[I][J]/(0.5*AREAw) * AREAs * AREAw;
+					SP_u[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus[I][J]/(0.5*AREAw) * AREAs * AREAw;
 					SP[I][J] = SP_u[I][J];
 					Su_u[I][J] = tw[I][J] * 0.5 * (u[i][J] + u[i+1][J])/(0.5*AREAw) * AREAs * AREAw;
 					Su[I][J] = Su_u[I][J];
 				}
 				// Calculate sourceterm in v-direction:
 				if (CONS[I][J][XPLUS] == true) {
-					SP_v[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * uplus_v[I][J]/(0.5*AREAs) * AREAs * AREAw;
+					SP_v[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * vplus[I][J]/(0.5*AREAs) * AREAs * AREAw;
 					SP[I][J] = SP_v[I][J];
 					Su_v[I][J] = tw[I][J] * 0.5 * (v[I][j] + v[I][j+1])/(0.5*AREAs) * AREAs * AREAw;
 					Su[I][J] = Su_v[I][J];
@@ -1230,8 +1235,10 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 				
 				// Calculate magnitude of source terms if both valid: k gaat uit van de wall shear stress. Je zou deze kunnen schrijven als de lengte van de vector (du/dy, dv/dx).
 				if (CONS[I][J][YPLUS]*CONS[I][J][XPLUS] == true) {
-					SP[I][J] = mag(SP_u[I][J], SP_v[I][J]);
-					Su[I][J] = mag(Su_u[I][J], Su_v[I][J]);
+					SP[I][J] = -rho[I][J] * pow(Cmu,0.75) * sqrt(k[I][J]) * mag(vplus[I][J], uplus[I][J])/(mag(0.5*AREAs,0.5*AREAw)) * AREAs * AREAw;
+					Su[I][J] = tw[I][J] * 0.5 * mag((u[i][J] + u[i+1][J]),(v[I][j] + v[I][j+1]))/mag(0.5*AREAs,0.5*AREAw) * AREAs * AREAw;
+//					SP[I][J] = mag(SP_u[I][J], SP_v[I][J]);
+//					Su[I][J] = mag(Su_u[I][J], Su_v[I][J]);
 				}
 			}
 			else {
@@ -1300,40 +1307,40 @@ void calc_wall_coeff(void)
 		for (J = Jstart; J <= Jend; J++) {
 			j = J;
 	    	
-	    	// Calculate: yplus_u
+	    	// Calculate: yplus
 	        if (CONS[I][J][YPLUS] == true) {
 				        
-	        	if (yplus_u[I][J] < 11.63) { // PIM: Initialise yplus_u instead of yplus1!
+	        	if (yplus[I][J] < 11.63) { // PIM: Initialise yplus instead of yplus1!
                 	tw[I][J]       = mu[I][J] * 0.5 * (u[i][J]+u[i+1][J]) / (0.5*Dy); // PIM: in general holds: 0.5*Dy = y[1] -y[0]
-                  	yplus_u[I][J]  = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dy) / mu[I][J];
-                  	uplus_u[I][J]  = yplus_u[I][J];
+                  	yplus[I][J]  = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dy) / mu[I][J];
+                  	uplus[I][J]  = yplus[I][J];
                   	
             	}/* if */
             	else {
-                  	tw[I][J]       = rho[I][J] * pow(Cmu,0.25) * sqrt(k[I][J]) * 0.5 * (u[i][J]+u[i+1][J]) / uplus_u[I][J];
-                  	yplus_u [I][J] = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dy) / mu[I][J];
-                  	uplus_u [I][J] = log(ERough*yplus_u[I][J])/kappa;
-					Tplus_u [I][J] = turb_Prandtl*(uplus_u[I][J] + Pee(turb_Prandtl, Prandtl[I][J])); /* Turbulet T+, eq. 3.50 */
+                  	tw[I][J]       = rho[I][J] * pow(Cmu,0.25) * sqrt(k[I][J]) * 0.5 * (u[i][J]+u[i+1][J]) / uplus[I][J];
+                  	yplus [I][J] = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dy) / mu[I][J];
+                  	uplus [I][J] = log(ERough*yplus[I][J])/kappa;
+					Tplus_u [I][J] = turb_Prandtl*(uplus[I][J] + Pee(turb_Prandtl, Prandtl[I][J])); /* Turbulet T+, eq. 3.50 */
 					
 					// Test Pee_u (never used)
                   	Pee_u   [I][J] = Pee(turb_Prandtl, Prandtl[I][J]);
             	}/* else */
 	        } /* if */
 	        
-	        // Calculate: yplus_v
+	        // Calculate: xplus
 	        if (CONS[I][J][XPLUS] == true) {
 				        
-	        	if (yplus_v[I][J] < 11.63) { 
+	        	if (xplus[I][J] < 11.63) { 
                 	tw[I][J]       = mu[I][J] * 0.5 * (v[I][j]+v[I][j+1]) / (0.5*Dx); 
-                  	yplus_v[I][J]  = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dx) / mu[I][J];
-                  	uplus_v[I][J]  = yplus_v[I][J];
+                  	xplus[I][J]  = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dx) / mu[I][J];
+                  	vplus[I][J]  = xplus[I][J];
                   	
             	}/* if */
             	else {
-                  	tw[I][J]       = rho[I][J] * pow(Cmu,0.25) * sqrt(k[I][J]) * 0.5 * (v[I][j]+v[I][j+1]) / uplus_v[I][J];
-                  	yplus_v [I][J] = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dx) / mu[I][J];
-                  	uplus_v [I][J] = log(ERough*yplus_v[I][J])/kappa;
-					Tplus_v [I][J] = turb_Prandtl*(uplus_v[I][J] + Pee(turb_Prandtl, Prandtl[I][J])); /* Turbulet T+, eq. 3.50 */
+                  	tw[I][J]       = rho[I][J] * pow(Cmu,0.25) * sqrt(k[I][J]) * 0.5 * (v[I][j]+v[I][j+1]) / vplus[I][J];
+                  	xplus [I][J] = sqrt(rho[I][J] * fabs(tw[I][J])) * (0.5*Dx) / mu[I][J];
+                  	vplus [I][J] = log(ERough*xplus[I][J])/kappa;
+					Tplus_v [I][J] = turb_Prandtl*(vplus[I][J] + Pee(turb_Prandtl, Prandtl[I][J])); /* Turbulet T+, eq. 3.50 */
                   	
                   	// Test Pee_v (never used)
                   	Pee_v   [I][J] = Pee(turb_Prandtl, Prandtl[I][J]);
@@ -1415,7 +1422,7 @@ void output(void)
 
 			//################BEGIN SELF ADDED CODE################//
 			fprintf(fp, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
-			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], Tplus_u[I][J], Tplus_v[I][J], yplus_u[I][J], yplus_v[I][J], uplus_u[I][J], uplus_v[I][J], Pee_u[I][J], Pee_v[I][J]);
+			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], Tplus_u[I][J], Tplus_v[I][J], yplus[I][J], xplus[I][J], uplus[I][J], vplus[I][J], Pee_u[I][J], Pee_v[I][J]);
 //			             1     2     3      4      5        6        7          8         9            10       11         12             13             14             15             16             17              18           19
 			//#################END SELF ADDED CODE#################//  
 		} /* for J */
@@ -1577,8 +1584,6 @@ void memalloc(void)
 	E      = double_2D_matrix(NPI + 2, NPJ + 2);
 	E2     = double_2D_matrix(NPI + 2, NPJ + 2);
 	yplus  = double_2D_matrix(NPI + 2, NPJ + 2);
-	yplus1 = double_2D_matrix(NPI + 2, NPJ + 2);
-	yplus2 = double_2D_matrix(NPI + 2, NPJ + 2);
 	uplus  = double_2D_matrix(NPI + 2, NPJ + 2);
 	tw     = double_2D_matrix(NPI + 2, NPJ + 2);
 
@@ -1615,10 +1620,10 @@ void memalloc(void)
 	d_v    = double_2D_matrix(NPI + 2, NPJ + 2);
 	
 	//################BEGIN SELF ADDED CODE################//
-	yplus_u = double_2D_matrix(NPI + 2, NPJ + 2);
-	yplus_v = double_2D_matrix(NPI + 2, NPJ + 2);
-	uplus_u = double_2D_matrix(NPI + 2, NPJ + 2);
-	uplus_v = double_2D_matrix(NPI + 2, NPJ + 2);
+	yplus = double_2D_matrix(NPI + 2, NPJ + 2);
+	xplus = double_2D_matrix(NPI + 2, NPJ + 2);
+	uplus = double_2D_matrix(NPI + 2, NPJ + 2);
+	vplus = double_2D_matrix(NPI + 2, NPJ + 2);
 	Tplus_u = double_2D_matrix(NPI + 2, NPJ + 2); 
 	Tplus_v = double_2D_matrix(NPI + 2, NPJ + 2);
 	Prandtl = double_2D_matrix(NPI + 2, NPJ + 2);
@@ -1643,8 +1648,8 @@ void readInput (char *name)
 
 	FILE        *fp;
 	int			ncons, icons;
-	int			nyplus_u, iyplus_u;
-	int			nyplus_v, iyplus_v;
+	int			nyplus, iyplus;
+	int			nxplus, ixplus;
 	int 		I, J, ad;
 	
 	// open file to read from
@@ -1704,36 +1709,36 @@ void readInput (char *name)
 	printf("Constrains:    Fixed =  %4d ",ncons);
 
 	// ###########################################
-	// Get yplus_u points from text file
-	fscanf( fp, "%*s %d", &nyplus_u );
+	// Get yplus points from text file
+	fscanf( fp, "%*s %d", &nyplus );
 
 	// loop through items in file	
-	for (iyplus_u = 0; iyplus_u < nyplus_u; iyplus_u++) {
+	for (iyplus = 0; iyplus < nyplus; iyplus++) {
 		fscanf( fp, " %d  %d  %d", &I, &J, &ad);
-		/* yplus_u constrain in 1 */
+		/* yplus constrain in 1 */
 		CONS[I][J][YPLUS] = true;
 		/* temperature constrain in 3 */
 		CONS[I][J][HOT] = ad;
 	}
 
 	// Print results
-	printf("         yplus_u =  %4d ",nyplus_u);
+	printf("           yplus =  %4d ",nyplus);
 
 	// ###########################################
-	// Get yplus_v points from text file
-	fscanf( fp, "%*s %d", &nyplus_v );
+	// Get xplus points from text file
+	fscanf( fp, "%*s %d", &nxplus );
 
 	// loop through items in file	
-	for (iyplus_v = 0; iyplus_v < nyplus_v; iyplus_v++) {
+	for (ixplus = 0; ixplus < nxplus; ixplus++) {
 		fscanf( fp, " %d  %d  %d", &I, &J, &ad);
-		/* yplus_u constrain in 2 */
+		/* yplus constrain in 2 */
 		CONS[I][J][XPLUS] = true;
 		/* temperature constrain in 3 */
 		CONS[I][J][HOT] = ad;
 	}
 
 	// Print results
-	printf("         yplus_v =  %4d \n",nyplus_v);
+	printf("           xplus =  %4d \n",nxplus);
 	printf("\n");
 	
 } /* readinput */
@@ -1765,7 +1770,7 @@ void animation(int time)
 			vgrid = 0.5*(v[I][j]+v[I  ][j+1]); /* interpolated vertical velocity */
 			
 			fprintf(f_p, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
-			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], Tplus_u[I][J], Tplus_v[I][J], yplus_u[I][J], yplus_v[I][J], uplus_u[I][J], uplus_v[I][J]);
+			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], Tplus_u[I][J], Tplus_v[I][J], yplus[I][J], xplus[I][J], uplus[I][J], vplus[I][J]);
 //			             1     2     3      4      5        6        7          8         9            10       11         12             13             14              15            16             17
 		} /* for J */
 		fprintf(f_p, "\n");
