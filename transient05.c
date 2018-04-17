@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 	bound(); /* apply boundary conditions */
 	
 	Count = 0;
-//	animation(Count);
+	animation(Count);
 	
 	for (time = Dt; time <= TOTAL_TIME; time += Dt) {
 		iter = 0; 
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 		SAVG = LARGE;
 	
 		Count++;
-//		animation(Count);
+		animation(Count);
 		
 	} /* for Dt */
 	output();
@@ -264,7 +264,11 @@ void bound(void)
 	} /* for J */
 
 	for (J = 0; J <= NPJ+1; J++) {
+		// Set temperature gradient to zero
 		T[NPI+1][J] = T[NPI][J];
+		
+		// Set relative pressure outlet to zero
+		p[NPI+1][J] = 0;
 	} /* for J */
 
 	for (J = 0; J <= NPJ + 1; J++) {
@@ -791,7 +795,7 @@ void pccoeff(double **aE, double **aW, double **aN, double **aS, double **aP, do
 
 			SP[I][J] = 0.;
 			Su[I][J] = 0.;
-			
+						
 			b[I][J] += Su[I][J];
 
 			SMAX     = max2(SMAX,fabs(b[I][J]));
@@ -1388,6 +1392,9 @@ void output(void)
 			ugrid = 0.5*(u[i][J]+u[i+1][J  ]);
 			vgrid = 0.5*(v[I][j]+v[I  ][j+1]);
 
+			if (CONS[I][J][FIXED]*CONS[I][J][HOT] == true) {	/* On a wall, fix temperature */
+				p[I][J] = 0;
+			}
 			//################BEGIN SELF ADDED CODE################//
 			fprintf(fp, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
 			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], Tplus_u[I][J], Tplus_v[I][J], yplus_u[I][J], yplus_v[I][J], uplus_u[I][J], uplus_v[I][J], Pee_u[I][J], Pee_v[I][J]);
@@ -1725,7 +1732,7 @@ void animation(int time)
 	
 	char index[10];
 //    sprintf(index, "T%d_%d.dat", nloop, time);
-    sprintf(index, "T%d.dat", nloop);
+    sprintf(index, "Animation/T%d.dat", nloop);
     
 	f_p = fopen(index, "w");
 	
