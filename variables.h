@@ -57,8 +57,6 @@ double **delta;
 double **Prandtl;
 double **uplus;
 double **yplus;
-double **yplus1;
-double **yplus2;
 double **tw;
 
 double **u_old;
@@ -113,10 +111,8 @@ double *relax;
 double omega;
 
 // SELF ADDED VARIABLES
-double **yplus_u;
-double **yplus_v;
-double **uplus_u;
-double **uplus_v;
+double **xplus;
+double **vplus;
 double **Tplus_u;
 double **Tplus_v;
 double **lambda;

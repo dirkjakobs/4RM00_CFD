@@ -9,15 +9,36 @@ NPI = sum(Y == Y(1));
 X = reshape(X,[NPJ, NPI]);          % Reshape x
 Y = reshape(Y,[NPJ, NPI]);          % Reshape y
 
+%
+%vq = griddata(x,y,v,xgrid,ygrid);
+%uq = griddata(x,y,u,xgrid,ygrid);
+
+YMAX = ReadLine('constraints.dat',2);
+NPJX = ReadLine('constraints.dat',4);
+DY = YMAX / NPJX;
+
+XMAX = ReadLine('constraints.dat',1);
+NPIX = ReadLine('constraints.dat',3);
+DX = XMAX / NPIX;
+
+[xgrid,ygrid] = meshgrid(0:DX:XMAX,0:DY:YMAX);
+
+
 u = reshape(Data(:,3),[NPJ, NPI]);      v = reshape(Data(:,4),[NPJ, NPI]);
 p = reshape(Data(:,5),[NPJ, NPI]);      T = reshape(Data(:,6),[NPJ, NPI]);
 rho = reshape(Data(:,7),[NPJ, NPI]);    mu = reshape(Data(:,8),[NPJ, NPI]);
 
-% v = Data(:,4);          p = Data(:,5);          T = Data(:,6);
-% rho = Data(:,7);        mu = Data(:,8);         Gamma = Data(:,9);
-% k = Data(:,10);         eps = Data(:,11);       uplus = Data(:,12); 
-% yplus = Data(:,13);     yplus_u = Data(:,14);   yplus_v = Data(:,15);
-% uplus_u = Data(:,16);   uplus_v = Data(:,17);
+eps = reshape(Data(:,11),[NPJ, NPI]);
+
+
+% plot T
+figure(3)
+surf(X, Y, eps)
+hold on
+
+colorbar
+view(0,90)
+
 
 %% Load data from constraints file
 
@@ -50,6 +71,7 @@ function Q = AddedHeat(X_pos)
     % plot T
     figure(1)
     surf(X, Y, log(T))
+    shading interp
     hold on
     colorbar
     view(0,90)
@@ -77,7 +99,7 @@ function Q = AddedHeat(X_pos)
         
         % plot line where temperature is measured   
         line(X(:,I),Y(:,I),log(T(:,I)),'Color','red')
-        fprintf('Q_added at [x=%4.2f] = %f [W] Tavg = %3.0f [K]\n',X_pos(i),Q(i),mean(T(:,I)))
+        fprintf('Q_added at [x=%4.2f] = %f [W] Tavg = %6.2f [K]\n',X_pos(i),Q(i),mean(T(:,I)))
     end
 end
 
