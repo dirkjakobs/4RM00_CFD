@@ -50,7 +50,7 @@ view(0,90)
 figure(2)
 quiver(X,Y,u,v)
 
-Q = AddedHeat([0,0.3,0.5,0.6,0.7, 0.8, 0.9]);
+Q = AddedHeat([0,0.15,0.3,0.45]);
 
 
 function Q = AddedHeat(X_pos)
@@ -70,9 +70,10 @@ function Q = AddedHeat(X_pos)
     
     % plot T
     figure(1)
-    surf(X, Y, log(T))
-    shading interp
+    surf(X, Y, T)
+    %shading interp
     hold on
+    set(gca,'ZScale','log')
     colorbar
     view(0,90)
     
@@ -98,7 +99,7 @@ function Q = AddedHeat(X_pos)
         end
         
         % plot line where temperature is measured   
-        line(X(:,I),Y(:,I),log(T(:,I)),'Color','red')
+        line(X(:,I),Y(:,I),T(:,I),'Color','red')
         fprintf('Q_added at [x=%4.2f] = %f [W] Tavg = %6.2f [K]\n',X_pos(i),Q(i),mean(T(:,I)))
     end
 end

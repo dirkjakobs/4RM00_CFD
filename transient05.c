@@ -165,21 +165,18 @@ void init(void)
 
 	SMAX = LARGE;
 	SAVG = LARGE;
-	
-	//################BEGIN SELF ADDED CODE################//	
+		
 	// PIM: make Dx and Dy global!
 	Dx = XMAX/NPI;
 	Dy = YMAX/NPJ;
-	//#################END SELF ADDED CODE#################//
 
-	m_in  = 1.; // PIM: Waarom init 1? In globcont() wordt deze weer op nul gezet?
-	m_out = 1.; // PIM: Waarom init 1? In globcont() wordt deze weer op nul gezet?
+	m_in  = 1.;
+	m_out = 1.; 
 
 	for (I = 0; I <= NPI + 1; I++) {
 		i = I;
 		for (J = 0; J <= NPJ + 1; J++) {
 			j = J;
-//			u      [i][J] = U_IN*1.5*(1.-sqr(2.*(y[J]-YMAX/2.)/YMAX));     /* Guess velocity profile in x-direction */
 			u      [i][J] = U_IN;						/* Guess velocity profile in x-direction */
 			v      [I][j] = 0.;       					/* Velocity in y-direction */
 			p      [I][J] = 0.;       					/* Relative pressure */
@@ -200,7 +197,6 @@ void init(void)
 			eps_old[I][J] = eps[I][J];  				/* epsilon old timestep*/
 			k_old  [I][J] = k[I][J];    				/* k old timestep*/
 			
-			//################BEGIN SELF ADDED CODE################//
 			// Set yplus and uplus to 1
 			yplus [I][J] = 1.;
 			xplus [I][J] = 1.;
@@ -216,18 +212,17 @@ void init(void)
 	        if (CONS[I][J][XPLUS] == true) {
 				xplus [I][J] = sqrt(rho[I][J] * v[I][J] / mu[I][J]) * (0.5*Dx);
 	        } /* if */		
-			//#################END SELF ADDED CODE#################//
 			
 		} /* for J */
 	} /* for I */
 
 	/* Setting the relaxation parameters */
 
-	//relax_u = 0.8;             /* See eq. 6.36 */ ### DONE WITH TEXT FILE ###
+	/* relax_u is set by ReadInput, See eq. 6.36 */
+	/* relax_T is set by ReadInput, Relaxation factor for temperature */
 	relax_v   = relax_u;       /* See eq. 6.37 */
 	relax_pc  = 1.1 - relax_u; /* See eq. 6.33 */
-	//relax_T = 1.0;  /* Relaxation factor for temperature */ ### DONE WITH TEXT FILE ###
-
+	
 } /* init */
 
 /* ################################################################# */
@@ -242,7 +237,6 @@ void bound(void)
 	for (J = 0; J <= NPJ + 1; J++) {
 		/* Temperature at the walls in Kelvin */
 		u[1][J] = U_IN; /* inlet */
-//		u[1][J] = U_IN*1.5*(1.-sqr(2.*(y[J]-YMAX/2.)/YMAX)); /* inlet */
 	} /* for J */
 
 	for (I = 0; I <= NPI + 1; I++) {
@@ -276,17 +270,15 @@ void bound(void)
 		k[0][J] = 2./3.*sqr(U_IN*Ti); /* inlet */
 		eps[0][J] = pow(Cmu,0.75)*pow(k[0][J],1.5)/(0.07*YMAX*0.5); /* inlet */
 	} /* for J */
-	
-	//################BEGIN SELF ADDED CODE################//
 		
 	/* Set Wall Boundary values if applicable
 	   Boundary conditions need to be set if there is NO wall*/
+	
 	for (I = 1; I <= NPI + 1; I++) {
 		i = I;
 		// Lower wall gradient boundary conditions
 		if (CONS[I][0][0] != true) {
 			u[i][0] = u[i][1];
-//			v[I][0] = v[I][1];
 			v[I][0] = 0;				// velocity at walls in y-direction should be zero.
 			k[I][0] = k[I][1];
 			eps[I][0] = eps[I][1];
@@ -295,7 +287,6 @@ void bound(void)
 		// Upper wall gradient boundary conditionstrue
 		if (CONS[I][NPJ+1][0] != true) {
 			u[i][NPJ+1] = u[i][NPJ];
-//			v[I][NPJ+1] = v[I][NPJ];
 			v[I][NPJ+1] = 0;			// velocity at walls in y-direction should be zero.
 			k[I][NPJ+1] = k[I][NPJ];
 			eps[I][NPJ+1] = eps[I][NPJ];
@@ -303,8 +294,6 @@ void bound(void)
 		}
 
 	} /* for I */
-	
-	//#################END SELF ADDED CODE#################//
 
 } /* bound */
 
@@ -569,7 +558,6 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			mus = 0.25*(mueff[I][J] + mueff[I-1][J] + mueff[I][J-1] + mueff[I-1][J-1]);
 			mun = 0.25*(mueff[I][J] + mueff[I-1][J] + mueff[I][J+1] + mueff[I-1][J+1]);
 			
-			//################BEGIN SELF ADDED CODE################//
 			// Calculate sourceterm in u-direction:
 			if (CONS[I][J][FIXED] == true) {
 				SP[i][J] = - LARGE;
@@ -581,8 +569,7 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 					SP[i][J]= -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / uplus[I][J] * AREAs;
 			}
 			else
-				SP[i][J] = 0.;
-			//#################END SELF ADDED CODE#################//   			
+				SP[i][J] = 0.;  			
 
 			Su[i][J] = (mueff[I][J]*dudx[I][J] - mueff[I-1][J]*dudx[I-1][J]) / (x[I] - x[I-1]) + 
 			           (mun        *dvdx[i][j+1] - mus        *dvdx[i][j]) / (y_v[j+1] - y_v[j]) -
@@ -594,7 +581,6 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			aW[i][J] = max3( Fw, Dw + 0.5*Fw, 0.);
 			aE[i][J] = max3(-Fe, De - 0.5*Fe, 0.);
 			
-			//################BEGIN SELF ADDED CODE################//
 			/* aS, check current position and for wall to the south (J-1) */
 			if (CONS[I][J][YPLUS] == true && CONS[I][J-1][FIXED] == true) aS[i][J]=0.;
 			else      aS[i][J] = max3( Fs, Ds + 0.5*Fs, 0.);
@@ -602,7 +588,6 @@ void ucoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			/* aN, check current position and for wall to the north (J+1) */
 			if (CONS[I][J][YPLUS] == true && CONS[I][J+1][FIXED] == true) aN[i][J] =0.;
 			else        aN[i][J] = max3(-Fn, Dn - 0.5*Fn, 0.);
-			//#################END SELF ADDED CODE#################//
             
 			aPold    = 0.5*(rho[I-1][J] + rho[I][J])*AREAe*AREAn/Dt;
 
@@ -689,7 +674,6 @@ void vcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			muw = 0.25*(mueff[I][J] + mueff[I-1][J] + mueff[I][J-1] + mueff[I-1][J-1]);
 			mue = 0.25*(mueff[I][J] + mueff[I+1][J] + mueff[I][J-1] + mueff[I+1][J-1]);
 
-			//################BEGIN SELF ADDED CODE################//
 			// Calculate sourceterm in v-direction:
 			if (CONS[I][J][FIXED] == true) {
 				SP[I][j] = -LARGE;
@@ -702,8 +686,7 @@ void vcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			}
 			// Set source terms to 0 if no vertical boundaries:
 			else
-				SP[I][j] = 0.;
-			//#################END SELF ADDED CODE#################// 
+				SP[I][j] = 0.; 
 
 			Su[I][j] = (mueff[I][J]*dvdy[I][J] - mueff[I][J-1]*dvdy[I][J-1])/(y[J] - y[J-1]) + 
 			           (mue*dudy[i+1][j] - muw*dudy[i][j])/(x_u[i+1] - x_u[i]) - 
@@ -960,12 +943,10 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 				if (CONS[I][J][YPLUS]*CONS[I][J][HOT] == true) {
 					
 					if(yplus[I][J] < 11.63) {	/* laminar flow, eq. 9.13 */
-//						SP_u[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAs/(0.5*AREAw); // unit [J/(sK)]
 						SP_u[I][J] = -mu[I][J]/Prandtl[I][J]*AREAs/(0.5*AREAw);
      		
 					}
-					else {	/* Turbulent flow, eq. 9.24 */
-//						SP_u[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J])* Cp[I][J] * AREAs / Tplus_u[I][J]; // unit [J/(sK)]
+					else {						/* Turbulent flow, eq. 9.24 */
 						SP_u[I][J] = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J])* AREAs / Tplus_u[I][J];
 					
 						/* Coefficient aS, check current position and for wall to the south (J-1) */
@@ -986,11 +967,9 @@ void Tcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 				if (CONS[I][J][XPLUS]*CONS[I][J][HOT] == true) {
 
 					if(xplus[I][J] < 11.63) { 	/* laminar flow, eq. 9.13 */
-//						SP_v[I][J] = -mu[I][J]/Prandtl[I][J]*Cp[I][J]*AREAw/(0.5*AREAs); // unit [J/(sK)]
 						SP_v[I][J] = -mu[I][J]/Prandtl[I][J]*AREAw/(0.5*AREAs);
 					}
 					else {						/* Turbulent flow, eq. 9.24 */
-//						SP_v[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) *Cp[I][J] / Tplus_v[I][J] * AREAw; // unit [J/(sK)]
 						SP_v[I][J]  = -rho[I][J] * pow(Cmu, 0.25) * sqrt(k[I][J]) / Tplus_v[I][J] * AREAw;
 					
 						/* Coefficient aW, check current position and for wall to the west (I-1) */
@@ -1208,8 +1187,6 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			De = mut[I  ][J  ]*mut[I+1][J  ]/sigmak/(mut[I  ][J  ]*(x[I+1] - x_u[i+1]) + mut[I+1][J  ]*(x_u[i+1] - x[I  ]))*AREAe;
 			Ds = mut[I  ][J-1]*mut[I  ][J  ]/sigmak/(mut[I  ][J-1]*(y[J  ] - y_v[j  ]) + mut[I  ][J  ]*(y_v[j  ] - y[J-1]))*AREAs;
 			Dn = mut[I  ][J  ]*mut[I  ][J+1]/sigmak/(mut[I  ][J  ]*(y[J+1] - y_v[j+1]) + mut[I  ][J+1]*(y_v[j+1] - y[J  ]))*AREAn;
-
-			//################BEGIN SELF ADDED CODE################//
 			
 			/* The source terms */
 			
@@ -1248,9 +1225,7 @@ void kcoeff(double **aE, double **aW, double **aN, double **aS, double **aP, dou
 			else {
 				Su[I][J]  = 2. * mut[I][J] * E2[I][J];
 				SP[I][J]  = -rho[I][J] * eps[I][J] / k[I][J];
-			}
-			
-			//#################END SELF ADDED CODE#################//                 
+			}                
 			
  			Su[I][j] *= AREAw*AREAs;
 			SP[I][j] *= AREAw*AREAs;
@@ -1389,8 +1364,6 @@ void properties(void)
     }
 } /* properties */
 
-//#################END SELF ADDED CODE#################// 
-
 /* ################################################################# */
 void printConv(double time, int iter)
 /* ################################################################# */
@@ -1427,11 +1400,9 @@ void output(void)
 			if (CONS[I][J][FIXED]*CONS[I][J][HOT] == true) {	/* On a wall, fix temperature */
 				p[I][J] = 0;
 			}
-			//################BEGIN SELF ADDED CODE################//
 			fprintf(fp, "%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\t%11.5e\n",
 			             x[I], y[J], ugrid, vgrid, p[I][J], T[I][J], rho[I][J], mu[I][J], Gamma[I][J], k[I][J], eps[I][J], Tplus_u[I][J], Tplus_v[I][J], yplus[I][J], xplus[I][J], uplus[I][J], vplus[I][J], Pee_u[I][J], Pee_v[I][J]);
-//			             1     2     3      4      5        6        7          8         9            10       11         12             13             14             15             16             17              18           19
-			//#################END SELF ADDED CODE#################//  
+//			             1     2     3      4      5        6        7          8         9            10       11         12             13             14             15             16             17              18           19 
 		} /* for J */
 		fprintf(fp, "\n");
 	} /* for I */
@@ -1626,7 +1597,6 @@ void memalloc(void)
 	d_u    = double_2D_matrix(NPI + 2, NPJ + 2);
 	d_v    = double_2D_matrix(NPI + 2, NPJ + 2);
 	
-	//################BEGIN SELF ADDED CODE################//
 	yplus = double_2D_matrix(NPI + 2, NPJ + 2);
 	xplus = double_2D_matrix(NPI + 2, NPJ + 2);
 	uplus = double_2D_matrix(NPI + 2, NPJ + 2);
@@ -1644,7 +1614,6 @@ void memalloc(void)
 	/* for Properties: */
 	lambda  = double_2D_matrix(NPI + 2, NPJ + 2);
 	p_abs   = double_2D_matrix(NPI + 2, NPJ + 2);
-	//#################END SELF ADDED CODE#################//
 
 } /* memalloc */
 
