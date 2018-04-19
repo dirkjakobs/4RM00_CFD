@@ -1,4 +1,4 @@
-clear all; clc; close all;
+%clear all; clc; close all;
 
 %% Import data
 Data = load('output.dat');
@@ -9,9 +9,24 @@ NPI = sum(Y == Y(1));
 X = reshape(X,[NPJ, NPI]);
 Y = reshape(Y,[NPJ, NPI]);
 u = reshape(Data(:,3),[NPJ, NPI]);
+v = reshape(Data(:,4),[NPJ, NPI]);
+p = reshape(Data(:,5),[NPJ, NPI]);
+
+figure(1)
+quiver(X,Y,u,v)
+axis equal
+ylim([0 0.045])
+xlim([0 0.2])
+
+
+title('Vector plot velocities')
+xlabel('[m]')
+ylabel('[m]')
 
 %plot with imagplot command: imagplot( X, Y, data, 'title');
-FIG = imagplot(X,Y,u,'Velocity in u-direction [m/s]');
+FIGu = imagplot(X,Y,u,'Velocity in u-direction [m/s]');
+FIGv = imagplot(X,Y,v,'Velocity in v-direction [m/s]');
+FIGp = imagplot(X,Y,p,'Pressure profile [Pa]');
 
 Q = AddedHeat([0,0.15,0.3,0.45]);
 
@@ -47,7 +62,7 @@ function Q = AddedHeat(X_pos)
     % loop through x-positions given as input
     for i = 1 : length(X_pos)
         % find node close to given argument X_pos
-        [~, I] = min(abs(X(1,:) - X_pos(i)));
+        [~, I] = min(abs(X(1,:) - X_pos(i)));   
         
         % loop over Y line
         for J = 1 : NPJ
@@ -58,7 +73,7 @@ function Q = AddedHeat(X_pos)
         
         % plot line where temperature is measured   
         figure(TPLOT)
-        line(X(:,I),Y(:,I),T(:,I),'Color','red')
+        % line(X(:,I),Y(:,I),T(:,I),'Color','red')
         fprintf('Q_added at [x=%4.2f] = %f [W] Tavg = %6.2f [K]\n',X_pos(i),Q(i),mean(T(:,I)))
     end
 end
@@ -78,13 +93,14 @@ function FIG = imagplot(X,Y,data,titel)
     YMIN = min(Y(:));
     YMAX = max(Y(:));    
     FIG = figure();
-    surf(X, Y, data)
+    %surf(X, Y, data)
+    pcolor(X, Y, data)
     hold on
 
     shading interp
     %colormap(jet(256))
     colorbar
-    view(0,90)
+    %view(2)
     axis equal
     grid off
     xlim([-0.05*XMAX 1.05*XMAX])
@@ -92,5 +108,6 @@ function FIG = imagplot(X,Y,data,titel)
     set(gca,'YTick',[0 : 0.015 : 0.045]);
     set(gca,'XTick',[0 : 0.15 : 0.45]);
     title(titel)
+   
 
 end
